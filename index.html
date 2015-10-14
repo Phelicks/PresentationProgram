@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>ppno</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+            
+            .top-menu-button{
+	           width: 50px;
+	           height: 50px;
+	           background: red;
+	           color: white;
+            }
+
+			#info {
+				color: #808080;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+                
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+            
+            #overlay-black{
+                display: none;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                background-color: black;
+                opacity: 0.6;
+                filter: alpha(opacity=60); /* For IE8 and earlier */
+                z-index: 100;
+            }
+            
+            #overlay-dialog{
+                display: none;
+                
+                top: 15%;
+                height: 40em;
+                position: fixed;
+                width: 75%;
+                left: 50%;
+                margin-left: -37.5%;
+                background-color: white;
+                z-index: 101;
+            }
+            
+            .tl-menu-step{
+                width: 2em;
+                height: 2em;
+                background-color: crimson;
+                border: solid;
+                border-width: 1px;
+                float: left;
+            }
+            
+            #timeline{
+                height: 300px;
+                background-color: beige;
+                overflow: auto;
+                white-space: nowrap;
+                
+                border: solid;
+                border-width: 1px;
+                padding-left: 1em;
+                padding-right: 1em;
+            }
+            
+            #el-container{
+                float: left;
+                margin-top: 1em;
+            }
+            
+            .tl-step{
+                display: inline-block;
+                vertical-align: top;
+                text-align: left;
+            }
+            
+            .tl-element{
+                width: 9em;
+                height: 3em;
+                
+                background-color: crimson;
+                border: solid;
+                border-width: 1px;
+            }
+            
+            .tl-element-ph{
+                width: 9em;
+                height: 3em;
+                
+                background-color: #FFC0CB;
+                border: solid;
+                border-width: 1px;
+            }
+            
+            #tl-add{
+                width: 1em;
+                height: 100%;
+                background-color: darkred;
+                display: inline-block;
+                
+				color: #FFFFFF;
+				font-family:Monospace;
+				font-size:5em;
+				text-align:center;
+            }
+            
+            #task-menu{
+                width: 100%;
+                height: 3em;
+                background-color: dimgrey;
+                
+                position: absolute;
+                bottom: 0px;
+            }
+            
+            #editor{
+                border: solid;
+            }
+
+			a {
+				color: #0080ff;
+			}
+            
+            .noselect{
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+
+		</style>
+
+		<script src="./three.min.js"></script>
+		<script src="./fonts/helvetiker_regular.typeface.js"></script>
+		<script src="./carota-debug.js"></script>
+		<script src="./stats.min.js"></script>
+		<script src="./canvas.js"></script>
+		<script src="./tasktypes.js"></script>
+		<script src="./timeline.js"></script>
+		<script src="./topmenu.js"></script>
+		<script src="./taskmenu.js"></script>
+		<script src="./script.js"></script>
+	</head>
+	
+	<body>
+        <div id="overlay-black"></div>
+        <div id="overlay-dialog">
+            <div id="ov-add-dialog">
+                <div>
+                    <div id="ov-add-text" style="float: left;">3D-Text:</div>
+                    <form>
+                        <input id="3d-text-value" type="text" name="3d-text-value" value="Hello World&#33;">
+                    </form>
+                </div>
+                <div id="ov-add-cube">cube</div>
+                <div id="ov-add-text-field">text field</div>
+                <div id="ov-add-aniamtion">animation</div>
+            </div>
+            <div id="ov-selection-dialog">
+            </div>
+        </div>
+        
+		<div id="info"><a href="http://januskopf.com" target="_blank">Felix Janus</a> Presentation Program No.1</div>
+		<div id="top-menu">
+            <div id="top-menu-open" class="top-menu-button">Open</div>
+        </div>
+        <div style="width: 100%; height: 500px;">
+            <canvas id="main"></canvas>
+        </div>
+        <div>
+            <div id="info-current-step">Current Step: 0</div>
+            <div id="prev-step" class="tl-menu-step noselect">&lt</div>
+            <div id="next-step" class="tl-menu-step noselect">&gt</div>
+            <div style="clear: both"></div>
+        </div>
+        <div id="timeline">
+            <div id="el-container">
+            </div>
+            <div id="tl-add"><span style="vertical-align: middle;">+</span></div>
+        </div>
+        <div id="editor"></div>
+        <div id="task-menu"></div>
+	</body>
+</html>
