@@ -1,5 +1,5 @@
 /*jslint browser: true*/
-/*global THREE, carota*/
+//*global THREE, carota*/
 
 window.onload = init;
 var c = function(t){console.log(t);};

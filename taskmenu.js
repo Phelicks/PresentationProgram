@@ -24,7 +24,6 @@ function taskMenuOpen(taskObj){
         dom.html.style.display = "block";
         
         if(!domElement.contains(dom.html)){
-            dom.html.style.display = "block";
             domElement.appendChild(dom.html);
         }
     }

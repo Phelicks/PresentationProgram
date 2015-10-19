@@ -12,10 +12,14 @@
 			}
             
             .top-menu-button{
-	           width: 50px;
-	           height: 50px;
-	           background: red;
-	           color: white;
+                height: 2em;
+                padding-left: 0.5em;
+                padding-right: 0.5em;
+                margin: 0.2em;
+                background: crimson;
+                color: white;
+                float: left;
+                text-align: center;
             }
 
 			#info {
@@ -27,6 +31,7 @@
 				position: absolute;
 				top: 0px; width: 100%;
 				padding: 5px;
+                z-index: -1;
 			}
             
             #overlay-black{
@@ -124,6 +129,15 @@
                 bottom: 0px;
             }
             
+            .task-menu-button{
+                background-color: crimson;
+                float: left;
+                padding: 0.5em;
+                margin: 0.5em;
+                border: solid;
+                border-width: 1px;
+            }
+            
             #editor{
                 border: solid;
             }
@@ -143,31 +157,39 @@
 
 		</style>
 
-		<script src="./three.min.js"></script>
-		<script src="./fonts/helvetiker_regular.typeface.js"></script>
-		<script src="./carota-debug.js"></script>
-		<script src="./stats.min.js"></script>
+		<script src="lib/jquery-2.1.4.min.js"></script>
+		<script src="lib/three.min.js"></script>
+		<script src="lib/TextGeometry.js"></script>
+		<script src="lib/FontUtils.js"></script>
+        
+		<script src="lib/fonts/helvetiker_regular.typeface.js"></script>
+		
+        <script src="lib/carota-debug.js"></script>
+        <script src="lib/spectrum.js"></script>
+		
+        <script src="lib/jszip.min.js"></script>
+        <script src="lib/FileSaver.min.js"></script>
+        <script src="lib/stats.min.js"></script>
+        
 		<script src="./canvas.js"></script>
 		<script src="./tasktypes.js"></script>
 		<script src="./timeline.js"></script>
 		<script src="./topmenu.js"></script>
 		<script src="./taskmenu.js"></script>
 		<script src="./script.js"></script>
+        
+        <link rel="stylesheet" href="lib/spectrum.css" />
 	</head>
 	
 	<body>
         <div id="overlay-black"></div>
         <div id="overlay-dialog">
             <div id="ov-add-dialog">
-                <div>
-                    <div id="ov-add-text" style="float: left;">3D-Text:</div>
-                    <form>
-                        <input id="3d-text-value" type="text" name="3d-text-value" value="Hello World&#33;">
-                    </form>
-                </div>
+                <div id="ov-add-text">3D-Text</div>
                 <div id="ov-add-cube">cube</div>
                 <div id="ov-add-text-field">text field</div>
                 <div id="ov-add-aniamtion">animation</div>
+                <div id="ov-remove">remove</div>
             </div>
             <div id="ov-selection-dialog">
             </div>
@@ -176,7 +198,10 @@
 		<div id="info"><a href="http://januskopf.com" target="_blank">Felix Janus</a> Presentation Program No.1</div>
 		<div id="top-menu">
             <div id="top-menu-open" class="top-menu-button">Open</div>
+            <div id="top-menu-save" class="top-menu-button">Save</div>
+            <input type="file" id="top-menu-load" class="top-menu-button"/>
         </div>
+        <div style="clear: both"></div>
         <div style="width: 100%; height: 500px;">
             <canvas id="main"></canvas>
         </div>

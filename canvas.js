@@ -4,7 +4,8 @@
 var scene, raycaster, mainRenderer, mainCamera;
 var renderers = [];
 var meshes = [];
-var bbox, clickedMesh;
+var bboxHelper = [];
+var bbox, selectedMesh, clickedMesh;
 var selection = false;
 var mouseDownStart = new THREE.Vector2();
 var textures = [];
@@ -79,22 +80,25 @@ function openCanvasWindow(){
 
 function animate() {
 	requestAnimationFrame( animate );
+    var i=0;
     
-    for(var i=0; i < textures.length; i++){
+    for(i=0; i < textures.length; i++){
         //TODO only on change
         textures[i].needsUpdate = true;
     }
     // update scene
-	//var time = performance.now() / 2000;
+    for(i=0; i<meshes.length; i++){
+        var mesh = meshes[i];
+        mesh.boundingBoxHelper.update();
+    }
+    if(selectedMesh){
+        bbox.update(selectedMesh);
+    }
 
-    for(var i=0; i<renderers.length; i++){
+    for(i=0; i<renderers.length; i++){
         var renderer = renderers[i].renderer;
         var camera = renderers[i].camera;
-        
-//        camera.position.z = 1000;
-
         camera.lookAt( scene.position );
-
         renderer.render( scene, camera );
     }
 }
@@ -135,16 +139,7 @@ function onCanvasMouseDown( event ) {
 	mouse.x =  (event.offsetX / mainRenderer.domElement.width ) * 2 - 1;
 	mouse.y = -(event.offsetY / mainRenderer.domElement.height) * 2 + 1;
     
-    clickedMesh = getObjectOn(mouse);
-    if(clickedMesh){
-        var p = clickedMesh.position;
-        clickedMesh.originalPosition = new THREE.Vector3(p.x, p.y, p.z);
-
-        select(clickedMesh);
-    }
-    else{
-        deselect();
-    }
+    getObjectSelection(mouse);
 }
 function onCanvasMouseUp(event){
     clickedMesh = undefined;
@@ -157,54 +152,87 @@ function onCanvasMouseMove(event){
     
         var oP = clickedMesh.originalPosition;
         clickedMesh.position.set(oP.x + (x-mouseDownStart.x)/1.4, oP.y - (y-mouseDownStart.y)/1.4, oP.z);//TODO 1.4
-        clickedMesh.boundingBoxHelper.update();
-        clickedMesh.boundingBoxHelper.scale.z = 0.01;//TODO
         select(clickedMesh);
         onMeshChange(clickedMesh);
     }
 }
+function getObjectSelection(point){
+    clickedMesh = getObjectOn(point);
+    if(clickedMesh){
+        var p = clickedMesh.position;
+        clickedMesh.originalPosition = new THREE.Vector3(p.x, p.y, p.z);
+    
+        selectionOnCanvas(clickedMesh);
+        select(clickedMesh);
+    }
+    else{
+        deselect();
+        deselectionOnCanvas();
+    }
+}
+function getObjectOn(point){
+    raycaster.setFromCamera(point, mainCamera);
+	var intersects = raycaster.intersectObjects(bboxHelper);
+
+	if (intersects.length > 0) {
+        return intersects[0].object.object;
+	}
+    return null;
+}
 
 function prepMesh(mesh){
+    //TODO
+    //make sure if you use scene.remove(mesh), you also call mesh.geometry.dispose(), mesh.material.dispose() and mesh.texture.dispose()
 	scene.add(mesh);
     
-    var box = new THREE.BoundingBoxHelper(mesh, 0xFF00FF);
+    var box = new THREE.BoundingBoxHelper(mesh, 0xFF0000);
     box.update();
     box.material.visible = false;
     box.scale.z = 0.01;//TODO
     scene.add(box);
-    meshes.push(box);
+    bboxHelper.push(box);
     
     mesh.boundingBoxHelper = box;
     mesh.setVisible = function(bool){
         mesh.visible = bool;
         box.visible = bool;
     };
+    meshes.push(mesh);
+}
+function deleteMesh(mesh){
+    var bboxInx = bboxHelper.indexOf(mesh.boundingBoxHelper);
+    if(bboxInx >= 0)bboxHelper.splice(bboxInx, 1);
+    mesh.boundingBoxHelper.geometry.dispose();
+    mesh.boundingBoxHelper.material.dispose();
+    scene.remove(mesh.boundingBoxHelper);
+    
+    var meshInx = meshes.indexOf(mesh);
+    if(meshInx >= 0)meshes.splice(meshInx, 1);
+    mesh.geometry.dispose();
+    mesh.material.dispose();
+    scene.remove(mesh);
 }
 function select(mesh){
+    if(mesh === selectedMesh)return;
+    //check for bbox mesh
     if(!bbox){
         bbox = new THREE.BoxHelper(mesh);
         scene.add(bbox);
     }
+    
     bbox.visible = true;
     bbox.update(mesh);
+    
     if(!selection){
         if(mesh.onClick){mesh.onClick();}
         selection = true;
     }
-    if(mesh.onClicked){mesh.onClicked();}
-    selectionOnCanvas(mesh);
+    //TODO if(mesh.onClicked){mesh.onClicked();}
+    
+    selectedMesh = mesh;
 }
 function deselect(){
     if(!bbox || !bbox.visible)return;
+    selectedMesh = undefined;
     bbox.visible = false;
-    deselectionOnCanvas();
-}
-function getObjectOn(point){
-    raycaster.setFromCamera(point, mainCamera);
-	var intersects = raycaster.intersectObjects(meshes);
-
-	if (intersects.length > 0) {
-        return intersects[0].object.object;
-	}
-    return null;
 }
