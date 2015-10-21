@@ -41,29 +41,44 @@ function initTaskTypes(){
         setTaskType(id, typeContainer[id]);
     }
 }
-function setTaskType(id, taskTypeFunc){
+function setTaskType(id, taskTypeContainer){
     var domElement = document.getElementById(id);
     if(!typeCount[id])typeCount[id] = 1;
     domElement.onclick = function(){
-        var tt = taskTypeFunc();
+        var tt;
+        if(taskTypeContainer.generateMesh){
+            var safe = taskTypeContainer.createSafe();
+            var mesh = taskTypeContainer.generateMesh();
+            tt = taskTypeContainer.getTaskType(mesh, safe);
+            tt.mesh = mesh;
+            tt.safe = safe;
+        }
+        else if(taskTypeContainer.isAnimation){
+            var safe = taskTypeContainer.createSafe();
+            tt = taskTypeContainer.getTaskType(safe);
+            tt.safe = safe;
+        }
+        else{
+            tt = taskTypeContainer.getTaskType();
+        }
+        
         tt.typeID = id;
         tt.name += " "+(typeCount[id]++);
+        
         if(tt.animation){
             addAnimationTask(tt);    
         }
         else if(tt.mesh){
             addCanvasTask(tt);
+            addEmptyTask(tt);
         }
         else{
             addEmptyTask(tt);
         }
     };
 }
-function saveAll(){
-//    c(taskObjects);
 
-//    var sceneSave = JSON.stringify(scene.toJSON());
-//    c(sceneSave);
+function saveAll(){
     var tasks = [];
     for(var i=0; i < taskObjects.length; i++){
         var task = taskObjects[i];
@@ -72,19 +87,22 @@ function saveAll(){
         if(task.animation){
             taskSave.animation = {};
             taskSave.animation.duration = task.animation.duration;
+            taskSave.animation.meshAddTaskID = task.mesh.addTask.id;
+            c(task);
         }
         else if(task.mesh){
             taskSave.mesh = JSON.stringify(task.mesh.toJSON());
         }
-        else{
-            c("Ignoring empty task.");
-            continue;
-        }
+//        else{
+//            console.warn("Ignoring empty task.");
+//            continue;
+//        }
         taskSave.id = task.id;
         taskSave.step = task.step;
         taskSave.taskType = {};
-        taskSave.taskType.taskID = task.taskType.taskID;
+        taskSave.taskType.typeID = task.taskType.typeID;
         taskSave.taskType.name = task.taskType.name;
+        taskSave.safe = task.taskType.safe;
         
         tasks[tasks.length] = (JSON.stringify(taskSave));
     }
@@ -106,23 +124,77 @@ function loadAll(e){
     if (!file) {return;}
 
     var reader = new FileReader();
-    reader.onload = loadFile;
+    reader.onload = parseSave;
     reader.readAsArrayBuffer(file);
     
-    function loadFile(f){
-        var zip = new JSZip(f.target.result);
-        var contents = zip.file("save").asText();
+    
+}
+function parseSave(f){
+    var i = 0;
+    var task;
+    
+    //Get zip content
+    var zip = new JSZip(f.target.result);
+    var contents = zip.file("save").asText();
+    //Get Tasks
+    var safe = JSON.parse(contents);
+    var tasksJSON = JSON.parse(safe.tasks);
+    var tasks = [];
+    
+    //Prepare Tasks (parse meshes)
+    var highestStep = 0;
+    var loader = new THREE.ObjectLoader();
+    for(i=0; i < tasksJSON.length; i++){
+        task = JSON.parse(tasksJSON[i]);
+        if(task.mesh)task.mesh = loader.parse(JSON.parse(task.mesh));
+        if(task.step > highestStep)highestStep = task.step;
+        tasks[task.id] = task;
+    }
+    
+    //Create steps
+    var steps = [];
+    for(i=0; i <= highestStep; i++){
+        steps.push(addStep());
+    }
+    //Create tasks
+    for(i=0; i < tasks.length; i++){
+        task = tasks[i];
+        if(!task){console.warn("Ignoring empty task");continue;}
+        var typeID = task.taskType.typeID;
+        if(!typeContainer[typeID]) throw "Unknown type " + typeID;
         
-        var save = JSON.parse(contents);
-        var tasks = JSON.parse(save.tasks);
-        
-        for(var i=0; i < tasks.length; i++){
-            var task = JSON.parse(tasks[i]);
-            if(task.mesh)task.mesh = JSON.parse(task.mesh);
-            
-            c(task);
+        var taskObj = addTask(steps[task.step]);
+        clickedTask = taskObj;
+        var tt;
+        //Mesh task
+        if(task.mesh){
+            tt = typeContainer[typeID].getTaskType(task.mesh, task.safe);
+            tt.mesh = task.mesh;
+            tt.safe = task.safe;
+            tt.typeID = typeID;
+            tt.name = task.taskType.name;
+            addCanvasTask(tt);
+            addEmptyTask(tt);
+        }
+        //Animation task
+        else if(task.animation){
+            tt = typeContainer[typeID].getTaskType(task.safe);
+            tt.safe = task.safe;
+            tt.animation.duration = task.animation.duration;
+            tt.typeID = typeID;
+            tt.name = task.taskType.name;
+            var mesh = tasks[task.animation.meshAddTaskID].mesh;
+            prepAnimationTask(clickedTask, tt, mesh);
+            addEmptyTask(tt);
+        }
+        //Empty task
+        else{
+            tt = typeContainer[typeID].getTaskType();
+            addEmptyTask(tt);
         }
     }
+    currentStep = 0;
+    updateStep();
 }
 
 //Step management
@@ -151,11 +223,12 @@ function addStep(){
     tlStep.appendChild(addElement);
     
     //Add an empty Task
-    addTask(tlStep);
+//    addTask(tlStep);
     
     document.getElementById("el-container").appendChild(tlStep);
     currentStep = tlStep.stepID;
     updateStep();
+    return tlStep;
 }
 function prevStep(){
     if(currentStep > 0)currentStep--;
@@ -166,6 +239,7 @@ function nextStep(){
     updateStep();
 }
 function updateStep(){
+    if(currentStep === previousStep)return;
     stepInfoDiv.innerHTML = "Current Step: " + currentStep;
     
     if(lastStepDiv)lastStepDiv.style.border = "none";
@@ -253,8 +327,8 @@ function activateAnimation(taskObj, reverse){
             window.requestAnimationFrame(function(){activateAnimation(taskObj, reverse);});
         }
         else if(currentStep > taskObj.step){
-            //TODO better cancel
-            ani.onCancel();
+            ani.onLoop(1.0);
+            ani.onEnd();
         }
     }
     else{
@@ -323,6 +397,7 @@ function addTask(tlStep){
     };
     
     tlStep.insertBefore(taskDiv, tlStep.lastChild);
+    return taskObj;
 }
 function addTaskToMesh(mesh, task){
     if(!mesh.tasks){
@@ -391,32 +466,20 @@ function updateAllTaskTypes(){
 function addCanvasTask(taskType){
     prepMesh(taskType.mesh);
     clickedTask.mesh = taskType.mesh;
-    
     addTaskToMesh(taskType.mesh, clickedTask);
-    addEmptyTask(taskType);
+}
+function prepAnimationTask(taskObj, taskType, mesh){
+    addTaskToMesh(mesh, taskObj);
+
+    taskType.animation.onInit(mesh);
+    
+    taskObj.htmlElement.style.backgroundColor = "#BBDD00";
+    taskObj.mesh = mesh;
+    taskObj.animation = taskType.animation;
 }
 function addAnimationTask(taskType){
     hideAddDialog();
     var overlay = document.getElementById("ov-selection-dialog");
-    
-    function meshSelect(div, mesh){
-        div.onclick = function(){
-            var init = taskType.animation.onInit;
-            if(init)init(mesh);
-            addTaskToMesh(mesh, clickedTask);
-            
-            clickedTask.htmlElement.style.backgroundColor = "#BBDD00";
-            clickedTask.mesh = mesh;
-            clickedTask.animation = taskType.animation;
-            addEmptyTask(taskType);
-            
-            //remove mesh selection
-            var child;
-            while ((child = overlay.firstChild)) {
-              overlay.removeChild(child);
-            }
-        };
-    }
     
     var meshes = getMeshes();
     for(var i=0; i<meshes.length; i++){
@@ -426,6 +489,19 @@ function addAnimationTask(taskType){
         meshSelect(div, mesh);
         
         overlay.appendChild(div);
+    }
+    
+    function meshSelect(div, mesh){
+        div.onclick = function(){
+            prepAnimationTask(clickedTask, taskType, mesh);
+            addEmptyTask(taskType);
+            
+            //remove mesh selection
+            var child;
+            while ((child = overlay.firstChild)) {
+              overlay.removeChild(child);
+            }
+        };
     }
 }
 function addEmptyTask(taskType){

@@ -3,16 +3,16 @@
 
 var typeContainer = {};
 
-var TaskAnimation = function(){};
+var TaskAnimation = function(){
+    this.safe = null;
+};
 TaskAnimation.prototype = {
     duration: 0,
-    safe: {},
     onInit: function(m){},
     onStart: function(){},
     onLoop: function(progress){},
     isActive: function(){},
     onEnd: function(){},
-    onCancel: function(){},
     onEdit: function(){}
 };
 
@@ -43,60 +43,87 @@ var Menu3D = function(mesh){
     };
 };
 
-typeContainer["ov-add-text"] = function(){
-    var text = createHTMLButton("Text: ");
-    var textField = document.createElement("input");
-    textField.type = "text";
-    textField.value = "Hello World!";
-    text.appendChild(textField);
+typeContainer["ov-add-text"] ={
+    createSafe: function(){
+        var safe = {};
+        return safe;
+    },
+    generateMesh: function(){
+        var geometry = new THREE.TextGeometry("Text", {size: 50, height: 0.01});
+        var material = new THREE.MeshBasicMaterial({color: Math.random() * 0xffffff});
+        var mesh = new THREE.Mesh(geometry, material);
+        mesh.position.z = -1000;
+        return mesh;
+    },
+    getTaskType: function(mesh, safe){
+        var text = createHTMLButton("Text: ");
+        var textField = document.createElement("input");
+        textField.type = "text";
+        textField.value = safe.textInfo ? safe.textInfo.text : "Text";
+        text.appendChild(textField);
 
-    var geometry = new THREE.TextGeometry(textField.value, {size: 50, height: 0.01});
-    var material = new THREE.MeshBasicMaterial({color: Math.random() * 0xffffff});
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.position.z = -1000;
-    
-    textField.onchange = function(){
-        mesh.geometry.dispose();
-        mesh.geometry = new THREE.TextGeometry(textField.value, {size: 50, height: 0.01});
-    };
-    
-    var color = createHTMLButton("Color");
-    var colorPick = document.createElement("input");
-    colorPick.type = "text";
-    color.appendChild(colorPick);
-    $(colorPick).spectrum({
-        color: "#f00",
-        move: function(color) {
-            mesh.material.dispose();
-            mesh.material = new THREE.MeshBasicMaterial({color: parseInt("0x"+color.toHex())});
+        textField.onchange = function(){
+            changeText(textField.value, {size: 50, height: 0.01});
+        };
+        function changeText(text, parameters){
+            mesh.geometry.dispose();
+            mesh.geometry = new THREE.TextGeometry(text, parameters);
+            safe.textInfo = {
+                text: text,
+                parameters: parameters
+            };
+            
         }
-    });
-    
-    var taskType = new TaskType();
-    taskType.mesh = mesh;
-    taskType.name = "3D Text";
-    taskType.menu = new Menu3D(mesh);
-    taskType.menu.text = {
-        html: text
-    };
-    taskType.menu.color = {
-        html: color
-    };
-    
-    return taskType;
+        if(safe.textInfo){
+            var info = safe.textInfo;
+            changeText(info.text, info.parameters);
+        }
+
+        var color = createHTMLButton("Color");
+        var colorPick = document.createElement("input");
+        colorPick.type = "text";
+        color.appendChild(colorPick);
+        $(colorPick).spectrum({
+            color: "#f00",
+            move: function(color) {
+                mesh.material.dispose();
+                mesh.material = new THREE.MeshBasicMaterial({color: parseInt("0x"+color.toHex())});
+            }
+        });
+
+        var taskType = new TaskType();
+        taskType.mesh = mesh;
+        taskType.name = "3D Text";
+        taskType.menu = new Menu3D(mesh);
+        taskType.menu.text = {
+            html: text
+        };
+        taskType.menu.color = {
+            html: color
+        };
+
+        return taskType;
+    }
 };
-typeContainer["ov-add-cube"] = function(){
-    var geometry = new THREE.BoxGeometry( 100, 100, 100 );
-    var material = new THREE.MeshNormalMaterial();
-    var cube = new THREE.Mesh( geometry, material );
-    cube.position.z = -1000;
-    
-    var taskType = new TaskType();
-    taskType.name = "3D Cube";
-    taskType.mesh = cube;
-    taskType.menu = new Menu3D(cube);
-    
-    return taskType;
+typeContainer["ov-add-cube"] = {
+    createSafe: function(){
+        var safe = {};
+        return safe;
+    },
+    generateMesh: function(){
+        var geometry = new THREE.BoxGeometry( 100, 100, 100 );
+        var material = new THREE.MeshNormalMaterial();
+        var cube = new THREE.Mesh( geometry, material );
+        cube.position.z = -1000;
+        return cube;
+    },
+    getTaskType: function(mesh){
+        var taskType = new TaskType();
+        taskType.name = "3D Cube";
+        taskType.menu = new Menu3D(mesh);
+
+        return taskType; 
+    }
 };
 typeContainer["ov-add-text-field"] = function(){
     var elem = document.createElement("div");//document.querySelector('#editor');
@@ -142,159 +169,176 @@ typeContainer["ov-add-text-field"] = function(){
     
     return taskType;
 };
-typeContainer["ov-add-aniamtion"] = function(){
-    var mesh;
-    var active = true;
-    var startPos = new THREE.Vector3();
-    var endPos = new THREE.Vector3();
-    var startTime = 0;
-    
-    var start = createHTMLButton("Set Start");
-    start.onclick = function(){
-        var p = mesh.position;
-        startPos.set(p.x, p.y, p.z);
-    };
-    var end = createHTMLButton("Set End");
-    end.onclick = function(){
-        var p = mesh.position;
-        endPos.set(p.x, p.y, p.z);
-    };
-    var durationDiv = createHTMLButton("Duration");
-    durationDiv.onclick = function(){
+typeContainer["ov-add-aniamtion"] = {
+    isAnimation: true,
+    createSafe: function(){
+        var safe = {};
+        safe.startPos = null;
+        safe.endPos = null;
+        return safe;
+    },
+    getTaskType: function(safe){
+        var taskType = new TaskType();
+        taskType.animation = new TaskAnimation();
         
-    };
-    
-    //Menu
-    var taskType = new TaskType();
-    taskType.name = "3D Animation";
-    taskType.menu.start = {
-        html: start
-    };
-    taskType.menu.end = {
-        html: end
-    };
-    taskType.menu.duration = {
-        html: durationDiv
-    };
-    
-    //Animation
-    taskType.animation = new TaskAnimation();
-    taskType.animation.duration = 1000;
-    taskType.animation.onInit = function(m){
-        mesh = m;
-        var p = mesh.position;
-        startPos.set(p.x, p.y, p.z);
-        endPos.set(p.x, p.y, p.z);
-    };
-    taskType.animation.onStart = function(){
-        active = true;
-        startTime = Date.now();
-        mesh.position.set(startPos.x, startPos.y, startPos.z);
-    };
-    taskType.animation.onLoop = function(progress){
-        if(progress > 1 || progress < 0){
-            active = false;
-            return;
-        }
-        var p = progress;
-        var q = 1.0 - p;
-        var f = startPos;
-        var t = endPos;
-        mesh.position.set(f.x*q + t.x*p, f.y*q + t.y*p, f.z*q + t.z*p);
-    };
-    taskType.animation.isActive = function(){
-        return active;
-    };
-    taskType.animation.onEnd = function(){
-        mesh.position.set(endPos.x, endPos.y, endPos.z);
-    };
-    taskType.animation.onCancel = function(){
-        mesh.position.set(endPos.x, endPos.y, endPos.z);
-    };
-    taskType.animation.onEdit = function(){
+        var active = true;
+        var mesh;
+        var startTime = 0;
+        var startPos = safe.startPos;
+        var endPos = safe.endPos;
         
-    };
-    
-    return taskType;
-};
-typeContainer["ov-remove"] = function(){
-    var button = createHTMLButton("3D Object: ");
-    var select = document.createElement("select");
-    button.appendChild(select);
-    
-    var selectedMesh = null;
-    var meshSave = null;
-    var onStep = NaN;
-    select.onchange = function(){
-        if(isNaN(onStep))return;
+        var start = createHTMLButton("Set Start");
+        start.onclick = function(){
+            var p = mesh.position;
+            if(!startPos)safe.startPos = startPos = {x:0, y:0, z: 0};
+            startPos.x = p.x;
+            startPos.y = p.y;
+            startPos.z = p.z;
+        };
         
-        if(selectedMesh)selectedMesh.removeOnStep = undefined;
+        var end = createHTMLButton("Set End");
+        end.onclick = function(){
+            var p = mesh.position;
+            if(!endPos)safe.endPos = endPos = {x:0, y:0, z: 0};
+            endPos.x = p.x;
+            endPos.y = p.y;
+            endPos.z = p.z;
+        };
         
-        selectedMesh = select.options[select.selectedIndex].mesh;
-        
-        if(meshSave){
-            for(var i=0; i<meshSave.length; i++){
-                var mesh = meshSave[i];
-                mesh.removeOnStep = undefined;
+        var durationDiv = createHTMLButton("Duration");
+        durationDiv.onclick = function(){
+
+        };
+
+        //Menu
+        taskType.name = "3D Animation";
+        taskType.menu.start = {
+            html: start
+        };
+        taskType.menu.end = {
+            html: end
+        };
+        taskType.menu.duration = {
+            html: durationDiv
+        };
+
+        //Animation
+        taskType.animation.duration = 1000;
+        taskType.animation.onInit = function(m){
+            mesh = m;
+        };
+        taskType.animation.onStart = function(){
+            if(!startPos || !endPos) return;
+            active = true;
+            startTime = Date.now();
+            mesh.position.set(startPos.x, startPos.y, startPos.z);
+        };
+        taskType.animation.onLoop = function(progress){
+            if(!startPos || !endPos) return;
+            if(progress > 1 || progress < 0){
+                active = false;
+                return;
             }
-            meshSave = null;
-        }
-        
-        if(selectedMesh === "all"){
-            meshSave = [];
+            var p = progress;
+            var q = 1.0 - p;
+            var f = startPos;
+            var t = endPos;
+            mesh.position.set(f.x*q + t.x*p, f.y*q + t.y*p, f.z*q + t.z*p);
+        };
+        taskType.animation.isActive = function(){
+            return active;
+        };
+        taskType.animation.onEnd = function(){
+            if(!startPos || !endPos) return;
+            mesh.position.set(endPos.x, endPos.y, endPos.z);
+        };
+        taskType.animation.onEdit = function(){
+
+        };
+
+        return taskType;
+    }
+};
+typeContainer["ov-remove"] = {
+    getTaskType: function(){
+        var button = createHTMLButton("3D Object: ");
+        var select = document.createElement("select");
+        button.appendChild(select);
+
+        var selectedMesh = null;
+        var meshSave = null;
+        var onStep = NaN;
+        select.onchange = function(){
+            if(isNaN(onStep))return;
+
+            if(selectedMesh)selectedMesh.removeOnStep = undefined;
+
+            selectedMesh = select.options[select.selectedIndex].mesh;
+
+            if(meshSave){
+                for(var i=0; i<meshSave.length; i++){
+                    var mesh = meshSave[i];
+                    mesh.removeOnStep = undefined;
+                }
+                meshSave = null;
+            }
+
+            if(selectedMesh === "all"){
+                meshSave = [];
+                var meshes = getMeshes();
+                for(var i=0; i<meshes.length; i++){
+                    var mesh = meshes[i];
+                    if(mesh.removeOnStep === undefined && mesh.addTask.step <= onStep){
+                        mesh.removeOnStep = onStep;
+                        meshSave.push(mesh);
+                    }
+                }
+            }
+            else if(selectedMesh){
+                selectedMesh.removeOnStep = onStep;
+            }
+            updateStep();
+        };
+
+        var taskType = new TaskType();
+        taskType.name = "Remove Object";
+        taskType.menu.meshSelect = {
+            html: button
+        };
+        taskType.onUpdate = function(taskStep){
+            //Remove old entries
+            var child;
+            while ((child = select.firstChild)) {
+              select.removeChild(child);
+            }
+
+            //Add default: All
+            var option = document.createElement("option");
+            option.innerHTML = "none";
+            if(!selectedMesh)option.selected = "selected";
+            select.appendChild(option);option = document.createElement("option");
+            option.innerHTML = "All";
+            option.mesh = "all";
+            if(selectedMesh === "all")option.selected = "selected";
+            select.appendChild(option);
+
+            //Add Meshes
             var meshes = getMeshes();
             for(var i=0; i<meshes.length; i++){
                 var mesh = meshes[i];
-                if(mesh.removeOnStep === undefined && mesh.addTask.step <= onStep){
-                    mesh.removeOnStep = onStep;
-                    meshSave.push(mesh);
+                if((mesh.removeOnStep === undefined || selectedMesh === mesh) && mesh.addTask.step <= taskStep){
+                    option = document.createElement("option");
+                    option.innerHTML = mesh.addTask.taskType.name;
+                    option.mesh = mesh;
+                    if(selectedMesh === mesh)option.selected = "selected";
+                    select.appendChild(option);
                 }
             }
-        }
-        else if(selectedMesh){
-            selectedMesh.removeOnStep = onStep;
-        }
-        updateStep();
-    };
-    
-    var taskType = new TaskType();
-    taskType.name = "Remove Object";
-    taskType.menu.meshSelect = {
-        html: button
-    };
-    taskType.onUpdate = function(taskStep){
-        //Remove old entries
-        var child;
-        while ((child = select.firstChild)) {
-          select.removeChild(child);
-        }
-        
-        //Add default: All
-        var option = document.createElement("option");
-        option.innerHTML = "none";
-        if(!selectedMesh)option.selected = "selected";
-        select.appendChild(option);option = document.createElement("option");
-        option.innerHTML = "All";
-        option.mesh = "all";
-        if(selectedMesh === "all")option.selected = "selected";
-        select.appendChild(option);
-        
-        //Add Meshes
-        var meshes = getMeshes();
-        for(var i=0; i<meshes.length; i++){
-            var mesh = meshes[i];
-            if((mesh.removeOnStep === undefined || selectedMesh === mesh) && mesh.addTask.step <= taskStep){
-                option = document.createElement("option");
-                option.innerHTML = mesh.addTask.taskType.name;
-                option.mesh = mesh;
-                if(selectedMesh === mesh)option.selected = "selected";
-                select.appendChild(option);
-            }
-        }
-        onStep = taskStep;
-        select.onchange();
-    };
-    return taskType;
+            onStep = taskStep;
+            select.onchange();
+        };
+        return taskType;
+    }
 };
 
 function createHTMLButton(text){
