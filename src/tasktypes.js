@@ -44,10 +44,6 @@ var Menu3D = function(mesh){
 };
 
 typeContainer["ov-add-text"] ={
-    createSafe: function(){
-        var safe = {};
-        return safe;
-    },
     generateMesh: function(){
         var geometry = new THREE.TextGeometry("Text", {size: 50, height: 0.01});
         var material = new THREE.MeshBasicMaterial({color: Math.random() * 0xffffff});
@@ -106,10 +102,6 @@ typeContainer["ov-add-text"] ={
     }
 };
 typeContainer["ov-add-cube"] = {
-    createSafe: function(){
-        var safe = {};
-        return safe;
-    },
     generateMesh: function(){
         var geometry = new THREE.BoxGeometry( 100, 100, 100 );
         var material = new THREE.MeshNormalMaterial();
@@ -171,12 +163,6 @@ typeContainer["ov-add-text-field"] = function(){
 };
 typeContainer["ov-add-aniamtion"] = {
     isAnimation: true,
-    createSafe: function(){
-        var safe = {};
-        safe.startPos = null;
-        safe.endPos = null;
-        return safe;
-    },
     getTaskType: function(safe){
         var taskType = new TaskType();
         taskType.animation = new TaskAnimation();
@@ -260,7 +246,7 @@ typeContainer["ov-add-aniamtion"] = {
     }
 };
 typeContainer["ov-remove"] = {
-    getTaskType: function(){
+    getTaskType: function(safe){
         var button = createHTMLButton("3D Object: ");
         var select = document.createElement("select");
         button.appendChild(select);
@@ -270,11 +256,10 @@ typeContainer["ov-remove"] = {
         var onStep = NaN;
         select.onchange = function(){
             if(isNaN(onStep))return;
-
-            if(selectedMesh)selectedMesh.removeOnStep = undefined;
-
-            selectedMesh = select.options[select.selectedIndex].mesh;
-
+            
+            var meshes = getMeshes();
+            
+            //Remove old 
             if(meshSave){
                 for(var i=0; i<meshSave.length; i++){
                     var mesh = meshSave[i];
@@ -282,10 +267,23 @@ typeContainer["ov-remove"] = {
                 }
                 meshSave = null;
             }
-
+            else if(!isNaN(selectedMesh)){
+                for(var i=0; i<meshes.length; i++){
+                    var mesh = meshes[i];
+                    if(mesh.addTask.id === selectedMesh){
+                        mesh.removeOnStep = undefined;
+                        break;
+                    }
+                }
+            }
+            
+            
+            //Set selectedMesh 
+            if(select.options[select.selectedIndex]){
+                selectedMesh = select.options[select.selectedIndex].meshID;
+            }
             if(selectedMesh === "all"){
                 meshSave = [];
-                var meshes = getMeshes();
                 for(var i=0; i<meshes.length; i++){
                     var mesh = meshes[i];
                     if(mesh.removeOnStep === undefined && mesh.addTask.step <= onStep){
@@ -294,11 +292,22 @@ typeContainer["ov-remove"] = {
                     }
                 }
             }
-            else if(selectedMesh){
-                selectedMesh.removeOnStep = onStep;
+            else if(!isNaN(selectedMesh)){
+                for(var i=0; i<meshes.length; i++){
+                    var mesh = meshes[i];
+                    if(mesh.addTask.id === selectedMesh){
+                        mesh.removeOnStep = onStep;
+                        break;
+                    }
+                }
             }
+            safe.selectedMesh = selectedMesh;
             updateStep();
         };
+        
+        onStep = safe.onStep === undefined ? NaN : safe.onStep;
+        selectedMesh = safe.selectedMesh === undefined ? null : safe.selectedMesh;
+        select.onchange();
 
         var taskType = new TaskType();
         taskType.name = "Remove Object";
@@ -315,10 +324,10 @@ typeContainer["ov-remove"] = {
             //Add default: All
             var option = document.createElement("option");
             option.innerHTML = "none";
-            if(!selectedMesh)option.selected = "selected";
+            if(selectedMesh === null)option.selected = "selected";
             select.appendChild(option);option = document.createElement("option");
             option.innerHTML = "All";
-            option.mesh = "all";
+            option.meshID = "all";
             if(selectedMesh === "all")option.selected = "selected";
             select.appendChild(option);
 
@@ -326,15 +335,16 @@ typeContainer["ov-remove"] = {
             var meshes = getMeshes();
             for(var i=0; i<meshes.length; i++){
                 var mesh = meshes[i];
-                if((mesh.removeOnStep === undefined || selectedMesh === mesh) && mesh.addTask.step <= taskStep){
+                if((mesh.removeOnStep === undefined || selectedMesh === mesh.addTask.id) && mesh.addTask.step <= taskStep){
                     option = document.createElement("option");
                     option.innerHTML = mesh.addTask.taskType.name;
-                    option.mesh = mesh;
-                    if(selectedMesh === mesh)option.selected = "selected";
+                    option.meshID = mesh.addTask.id;
+                    if(selectedMesh === mesh.addTask.id)option.selected = "selected";
                     select.appendChild(option);
                 }
             }
             onStep = taskStep;
+            safe.onStep = onStep;
             select.onchange();
         };
         return taskType;

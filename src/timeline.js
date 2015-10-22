@@ -46,24 +46,22 @@ function setTaskType(id, taskTypeContainer){
     if(!typeCount[id])typeCount[id] = 1;
     domElement.onclick = function(){
         var tt;
+        var safe = {};
         if(taskTypeContainer.generateMesh){
-            var safe = taskTypeContainer.createSafe();
             var mesh = taskTypeContainer.generateMesh();
             tt = taskTypeContainer.getTaskType(mesh, safe);
             tt.mesh = mesh;
-            tt.safe = safe;
         }
         else if(taskTypeContainer.isAnimation){
-            var safe = taskTypeContainer.createSafe();
             tt = taskTypeContainer.getTaskType(safe);
-            tt.safe = safe;
         }
         else{
-            tt = taskTypeContainer.getTaskType();
+            tt = taskTypeContainer.getTaskType(safe);
         }
         
         tt.typeID = id;
         tt.name += " "+(typeCount[id]++);
+        tt.safe = safe;
         
         if(tt.animation){
             addAnimationTask(tt);    
@@ -137,8 +135,8 @@ function parseSave(f){
     var zip = new JSZip(f.target.result);
     var contents = zip.file("save").asText();
     //Get Tasks
-    var safe = JSON.parse(contents);
-    var tasksJSON = JSON.parse(safe.tasks);
+    var data = JSON.parse(contents);
+    var tasksJSON = JSON.parse(data.tasks);
     var tasks = [];
     
     //Prepare Tasks (parse meshes)
@@ -178,9 +176,10 @@ function parseSave(f){
         }
         //Animation task
         else if(task.animation){
+            //TODO first all meshes 
             tt = typeContainer[typeID].getTaskType(task.safe);
-            tt.safe = task.safe;
             tt.animation.duration = task.animation.duration;
+            tt.safe = task.safe;
             tt.typeID = typeID;
             tt.name = task.taskType.name;
             var mesh = tasks[task.animation.meshAddTaskID].mesh;
@@ -189,7 +188,10 @@ function parseSave(f){
         }
         //Empty task
         else{
-            tt = typeContainer[typeID].getTaskType();
+            tt = typeContainer[typeID].getTaskType(task.safe);
+            tt.safe = task.safe;
+            tt.typeID = typeID;
+            tt.name = task.taskType.name;
             addEmptyTask(tt);
         }
     }
