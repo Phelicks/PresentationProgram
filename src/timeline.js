@@ -76,6 +76,7 @@ function setTaskType(id, taskTypeContainer){
     };
 }
 
+//Save presentation
 function saveAll(){
     var tasks = [];
     for(var i=0; i < taskObjects.length; i++){
@@ -318,30 +319,28 @@ function updateStep(){
     previousStep = currentStep;
 }
 function activateAnimation(taskObj, reverse){
+    if(currentStep !== taskObj.step)return;
+    
     var mesh = taskObj.mesh;
     var ani = taskObj.animation;
-    deselect();
-    if(ani.isActive()){
-        if(currentStep === taskObj.step){
-            var duration = Date.now() - ani.startTime;
-            var p = (reverse) ? 1.0-(duration/ani.duration) : (duration/ani.duration);
-            ani.onLoop(p);
-            window.requestAnimationFrame(function(){activateAnimation(taskObj, reverse);});
-        }
-        else if(currentStep > taskObj.step){
-            ani.onLoop(1.0);
-            ani.onEnd();
-        }
+    var duration = Date.now() - ani.startTime;
+    var p = reverse ? 1.0-(duration/ani.duration) : (duration/ani.duration);
+    var active = (p >= 0) && (p <= 1);
+        
+    if(active){
+        p = ani.easing ? ani.easing(p) : p;
+        ani.onLoop(p);
+        window.requestAnimationFrame(function(){activateAnimation(taskObj, reverse);});
+    }
+    else if(reverse){
+        ani.onStart();
     }
     else{
-        if(reverse){
-            ani.onStart();
-        }
-        else{
-            ani.onEnd();
-        }
-        if(clickedMesh === mesh)select(mesh);
+        ani.onEnd();
     }
+    
+//  deselect();
+//  if(clickedMesh === mesh)select(mesh);
 }
 
 //Task management
@@ -361,6 +360,7 @@ function addTask(tlStep){
     taskDiv.id = taskDivName+taskObj.id;
     taskDiv.onclick = function(){onTaskClicked(taskObj);};
     taskDiv.oncontextmenu = function(){
+        if(taskObj.taskType)taskObj.taskType.onDelete();
         removeTask(taskObj);
         taskMenuClose();
         event.preventDefault();

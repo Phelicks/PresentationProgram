@@ -1,20 +1,7 @@
 /*jslint browser: true*/
-/*global THREE*/
+/*global THREE, EasingFunctions*/
 
 var typeContainer = {};
-
-var TaskAnimation = function(){
-    this.safe = null;
-};
-TaskAnimation.prototype = {
-    duration: 0,
-    onInit: function(m){},
-    onStart: function(){},
-    onLoop: function(progress){},
-    isActive: function(){},
-    onEnd: function(){},
-    onEdit: function(){}
-};
 
 var TaskType = function(){
     this.menu = {};
@@ -23,7 +10,23 @@ TaskType.prototype = {
     mesh: null,
     animation: null,
     name: "name",
-    menu: null
+    menu: null,
+    
+    onDelete: function(){}
+};
+
+var TaskAnimation = function(){
+    this.safe = null;
+};
+TaskAnimation.prototype = {
+    duration: 1000,
+    easing: EasingFunctions.linear,
+    
+    onInit: function(m){},
+    onStart: function(){},
+    onLoop: function(progress){},
+    onEnd: function(){},
+    onEdit: function(){}
 };
 
 var Menu3D = function(mesh){
@@ -167,7 +170,6 @@ typeContainer["ov-add-aniamtion"] = {
         var taskType = new TaskType();
         taskType.animation = new TaskAnimation();
         
-        var active = true;
         var mesh;
         var startTime = 0;
         var startPos = safe.startPos;
@@ -192,8 +194,31 @@ typeContainer["ov-add-aniamtion"] = {
         };
         
         var durationDiv = createHTMLButton("Duration");
-        durationDiv.onclick = function(){
-
+        var textField = document.createElement("input");
+        textField.type = "text";
+        durationDiv.appendChild(textField);
+        textField.onchange = function(){
+            taskType.animation.duration = textField.value;
+            previousStep = -1;
+            updateStep();
+        };
+        
+        var easingDiv = createHTMLButton("Easing: ");
+        var select = document.createElement("select");
+        easingDiv.appendChild(select);
+        for(var e in EasingFunctions){
+            var option = document.createElement("option");
+            option.innerHTML = e;
+            option.easingFunction = e;
+            if(taskType.animation.easing === EasingFunctions[e])option.selected = "selected";
+            select.appendChild(option);
+        }
+        select.onchange = function(){
+            var selection = select.options[select.selectedIndex].easingFunction;
+            var easing = EasingFunctions[selection];
+            taskType.animation.easing = easing;
+            previousStep = -1;
+            updateStep();
         };
 
         //Menu
@@ -207,9 +232,15 @@ typeContainer["ov-add-aniamtion"] = {
         taskType.menu.duration = {
             html: durationDiv
         };
+        taskType.menu.easing = {
+            html: easingDiv
+        };
+        taskType.onUpdate = function(step){
+            textField.value = taskType.animation.duration;
+        };
 
         //Animation
-        taskType.animation.duration = 1000;
+//        taskType.animation.duration = 1000;
         taskType.animation.onInit = function(m){
             mesh = m;
         };
@@ -220,19 +251,11 @@ typeContainer["ov-add-aniamtion"] = {
             mesh.position.set(startPos.x, startPos.y, startPos.z);
         };
         taskType.animation.onLoop = function(progress){
-            if(!startPos || !endPos) return;
-            if(progress > 1 || progress < 0){
-                active = false;
-                return;
-            }
             var p = progress;
             var q = 1.0 - p;
             var f = startPos;
             var t = endPos;
             mesh.position.set(f.x*q + t.x*p, f.y*q + t.y*p, f.z*q + t.z*p);
-        };
-        taskType.animation.isActive = function(){
-            return active;
         };
         taskType.animation.onEnd = function(){
             if(!startPos || !endPos) return;
@@ -260,23 +283,7 @@ typeContainer["ov-remove"] = {
             var meshes = getMeshes();
             
             //Remove old 
-            if(meshSave){
-                for(var i=0; i<meshSave.length; i++){
-                    var mesh = meshSave[i];
-                    mesh.removeOnStep = undefined;
-                }
-                meshSave = null;
-            }
-            else if(!isNaN(selectedMesh)){
-                for(var i=0; i<meshes.length; i++){
-                    var mesh = meshes[i];
-                    if(mesh.addTask.id === selectedMesh){
-                        mesh.removeOnStep = undefined;
-                        break;
-                    }
-                }
-            }
-            
+            removeFrom(meshes);
             
             //Set selectedMesh 
             if(select.options[select.selectedIndex]){
@@ -304,6 +311,26 @@ typeContainer["ov-remove"] = {
             safe.selectedMesh = selectedMesh;
             updateStep();
         };
+        function removeFrom(meshes){
+            if(!meshes)meshes = getMeshes();
+            
+            if(meshSave){
+                for(var i=0; i<meshSave.length; i++){
+                    var mesh = meshSave[i];
+                    mesh.removeOnStep = undefined;
+                }
+                meshSave = null;
+            }
+            else if(!isNaN(selectedMesh)){
+                for(var i=0; i<meshes.length; i++){
+                    var mesh = meshes[i];
+                    if(mesh.addTask.id === selectedMesh){
+                        mesh.removeOnStep = undefined;
+                        break;
+                    }
+                }
+            }
+        }
         
         onStep = safe.onStep === undefined ? NaN : safe.onStep;
         selectedMesh = safe.selectedMesh === undefined ? null : safe.selectedMesh;
@@ -325,7 +352,9 @@ typeContainer["ov-remove"] = {
             var option = document.createElement("option");
             option.innerHTML = "none";
             if(selectedMesh === null)option.selected = "selected";
-            select.appendChild(option);option = document.createElement("option");
+            select.appendChild(option);
+            
+            option = document.createElement("option");
             option.innerHTML = "All";
             option.meshID = "all";
             if(selectedMesh === "all")option.selected = "selected";
@@ -346,6 +375,9 @@ typeContainer["ov-remove"] = {
             onStep = taskStep;
             safe.onStep = onStep;
             select.onchange();
+        };
+        taskType.onDelete = function(){
+            removeFrom();
         };
         return taskType;
     }
