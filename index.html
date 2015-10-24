@@ -12,6 +12,7 @@
 			}
             
             .top-menu-button{
+                cursor: pointer;
                 height: 2em;
                 padding-left: 0.5em;
                 padding-right: 0.5em;
@@ -130,6 +131,7 @@
             }
             
             .task-menu-button{
+                cursor: pointer;
                 background-color: crimson;
                 float: left;
                 padding: 0.5em;
@@ -146,6 +148,23 @@
 				color: #0080ff;
 			}
             
+            .file-upload {
+                position: relative;
+                overflow: hidden;
+            }
+            .file-upload input{
+                cursor: pointer;
+                position: absolute;
+                top: 0;
+                right: 0;
+                margin: 0;
+                padding: 0;
+                font-size: 20px;
+                height: 100%;
+                opacity: 0;
+                filter: alpha(opacity=0);
+            }
+            
             .noselect{
                 -webkit-touch-callout: none;
                 -webkit-user-select: none;
@@ -156,7 +175,11 @@
             }
 
 		</style>
-
+        
+        <link rel="stylesheet" href="lib/spectrum.css" />
+        <link rel="stylesheet" href="lib/fonts/font-awesome-4.4.0/css/font-awesome.min.css" />
+        
+        
 		<script src="lib/jquery-2.1.4.min.js"></script>
 		<script src="lib/three.min.js"></script>
 		<script src="lib/TextGeometry.js"></script>
@@ -164,6 +187,8 @@
 		<script src="lib/easing.js"></script>
         
 		<script src="lib/fonts/helvetiker_regular.typeface.js"></script>
+		<script src="lib/fonts/optimer_regular.typeface.js"></script>
+		<script src="lib/fonts/FontAwesome_Regular.js"></script>
 		
         <script src="lib/carota-debug.js"></script>
         <script src="lib/spectrum.js"></script>
@@ -178,46 +203,73 @@
 		<script src="src/topmenu.js"></script>
 		<script src="src/taskmenu.js"></script>
 		<script src="src/script.js"></script>
-        
-        <link rel="stylesheet" href="lib/spectrum.css" />
 	</head>
 	
 	<body>
-        <div id="overlay-black"></div>
+        <!--Info-->
+		<div id="info"><a href="http://januskopf.com" target="_blank">Felix Janus</a> Presentation Program No.1</div>
+
+        <!--Overlay-->
+		<div id="overlay-black"></div>
         <div id="overlay-dialog">
+            <!--Add Dialog-->
             <div id="ov-add-dialog">
                 <div id="ov-add-text">3D-Text</div>
+                <div id="ov-add-symbol">Symbole</div>
                 <div id="ov-add-cube">cube</div>
                 <div id="ov-add-text-field">text field</div>
                 <div id="ov-add-aniamtion">animation</div>
                 <div id="ov-remove">remove</div>
             </div>
+            
+            <!--Selection Dialog-->
             <div id="ov-selection-dialog">
+            </div>
+            
+            <!--Settings Dialog-->
+            <div id="ov-settings-dialog">
+                <div>Backgroundcolor<input type="text" id="bg-colorpick" value="#87CEFA"></div>
+                <script>
+                    $("#bg-colorpick").spectrum({
+                        move: changeBackgroundColor
+                    });
+                </script>                
             </div>
         </div>
         
-		<div id="info"><a href="http://januskopf.com" target="_blank">Felix Janus</a> Presentation Program No.1</div>
-		<div id="top-menu">
-            <div id="top-menu-open" class="top-menu-button">Open</div>
+        <!--Top Menu-->
+        <div id="top-menu">
+            <div id="top-menu-open" class="top-menu-button">Play</div>
             <div id="top-menu-save" class="top-menu-button">Save</div>
-            <input type="file" id="top-menu-load" class="top-menu-button"/>
+            <div id="top-menu-load" class="top-menu-button file-upload">
+                <div><input type="file"/>Load</div>
+            </div>
+            <div id="top-menu-settings" class="top-menu-button">Settings</div>
         </div>
         <div style="clear: both"></div>
+        
+        <!--Presentation Scene-->
         <div style="width: 100%; height: 500px;">
             <canvas id="main"></canvas>
         </div>
+        
+        <!--Timeline Menu-->
         <div>
             <div id="info-current-step">Current Step: 0</div>
             <div id="prev-step" class="tl-menu-step noselect">&lt</div>
             <div id="next-step" class="tl-menu-step noselect">&gt</div>
             <div style="clear: both"></div>
         </div>
+        
+        <!--Timeline-->
         <div id="timeline">
             <div id="el-container">
             </div>
             <div id="tl-add"><span style="vertical-align: middle;">+</span></div>
         </div>
         <div id="editor"></div>
+        
+        <!--Task Menu-->
         <div id="task-menu"></div>
 	</body>
 </html>

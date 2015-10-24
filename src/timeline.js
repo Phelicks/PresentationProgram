@@ -14,6 +14,10 @@ var draggedTaskDiv, clickedTask, selectedTask;
 var highlightedTasks = [];
 var typeCount = [];
 
+var addDialog       = "ov-add-dialog";
+var selectionDialog = "ov-selection-dialog";
+var settingsDialog  = "ov-settings-dialog";
+
 function initTimeline() {
     var addStepDiv = document.getElementById("tl-add");
     addStepDiv.onclick = addStep;
@@ -31,8 +35,10 @@ function initTimeline() {
     save.onclick = saveAll;
     
     var load = document.getElementById("top-menu-load");
-//    load.onclick = loadAll;
     load.addEventListener('change', loadAll, false);
+    
+    var settings = document.getElementById("top-menu-settings");
+    settings.onclick = openSettings;
     
     initTaskTypes();
 }
@@ -74,6 +80,13 @@ function setTaskType(id, taskTypeContainer){
             addEmptyTask(tt);
         }
     };
+}
+
+//Settings
+function openSettings(){
+    showOverlay();
+    dialogVisible(addDialog, false);
+    dialogVisible(settingsDialog, true);
 }
 
 //Save presentation
@@ -424,7 +437,7 @@ function onTaskClicked(taskObj){
     
     if(!taskObj.taskType){
         showOverlay();
-        showAddDialog();
+        dialogVisible(addDialog, true);
     }
     else{
         selectedTask = taskObj;
@@ -480,8 +493,8 @@ function prepAnimationTask(taskObj, taskType, mesh){
     taskObj.animation = taskType.animation;
 }
 function addAnimationTask(taskType){
-    hideAddDialog();
-    var overlay = document.getElementById("ov-selection-dialog");
+    dialogVisible(addDialog, false);
+    var overlay = document.getElementById(selectionDialog);
     
     var meshes = getMeshes();
     for(var i=0; i<meshes.length; i++){
@@ -576,6 +589,9 @@ function showOverlay(){
     overlay.style.display = "inline";
     var dialog = document.getElementById("overlay-dialog");
     dialog.style.display = "inline";
+    
+    dialogVisible(addDialog, false);
+    dialogVisible(settingsDialog, false);
 }
 function hideOverlay(){
     var overlay = document.getElementById("overlay-black");
@@ -583,11 +599,7 @@ function hideOverlay(){
     var dialog = document.getElementById("overlay-dialog");
     dialog.style.display = "none";
 }
-function hideAddDialog(){
-    var dialog = document.getElementById("ov-add-dialog");
-    dialog.style.display = "none";
-}
-function showAddDialog(){
-    var dialog = document.getElementById("ov-add-dialog");
-    dialog.style.display = "block";
+function dialogVisible(element, bool){
+    var dialog = document.getElementById(element);
+    dialog.style.display = bool ? "block" : "none";
 }

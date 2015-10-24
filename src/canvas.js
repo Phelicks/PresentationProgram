@@ -1,7 +1,7 @@
 /*jslint browser: true*/
 /*global THREE*/
 
-var scene, raycaster, mainRenderer, mainCamera;
+var scene, raycaster, mainRenderer, mainCamera, currentBGColor;
 var renderers = [];
 var meshes = [];
 var bboxHelper = [];
@@ -33,6 +33,7 @@ function initCanvas() {
 	rendererObj.canvas.addEventListener( 'mousemove', onCanvasMouseMove, true );
 	rendererObj.canvas.addEventListener( 'mouseup', onCanvasMouseUp, true );
 //	rendererObj.canvas.addEventListener( 'touchstart', onCanvasTouchStart, false ); //TODO
+    changeBackgroundColor(0x87CEFA);
 	animate();
 }
 function createRenderer(canvas){
@@ -42,7 +43,6 @@ function createRenderer(canvas){
     }
     
 	var renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true } );
-	renderer.setClearColor( 0x87CEFA );
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize(canvas.width, canvas.height);
     
@@ -76,6 +76,7 @@ function openCanvasWindow(){
     };
     window2.document.body.style.margin = 0;
     window2.document.body.appendChild(canvas);
+    changeBackgroundColor(currentBGColor);
 }
 
 function animate() {
@@ -178,6 +179,14 @@ function getObjectOn(point){
         return intersects[0].object.object;
 	}
     return null;
+}
+
+function changeBackgroundColor(color){
+    if(isNaN(color))color = Number("0x"+color.toHex());
+    currentBGColor = color;
+    for(var i=0; i < renderers.length; i++){
+        renderers[i].renderer.setClearColor(color);
+    }
 }
 
 function prepMesh(mesh){
