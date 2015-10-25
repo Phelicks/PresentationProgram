@@ -307,7 +307,6 @@ function updateStep(){
             else if(task.step === currentStep){
                 task.animation.startTime = Date.now();
                 if(previousStep > currentStep){
-                    task.animation.onStart();
                     task.animation.onEnd();
                     activateAnimation(task, true);
                 }
@@ -345,11 +344,23 @@ function activateAnimation(taskObj, reverse){
         ani.onLoop(p);
         window.requestAnimationFrame(function(){activateAnimation(taskObj, reverse);});
     }
-    else if(reverse){
-        ani.onStart();
-    }
     else{
-        ani.onEnd();
+        if(reverse){
+            ani.onStart();
+        }
+        else{
+            ani.onEnd();
+        }
+        if(ani.loop){
+            ani.startTime = Date.now();
+            if(reverse){
+                ani.onEnd();
+            }
+            else{
+                ani.onStart();
+            }
+            window.requestAnimationFrame(function(){activateAnimation(taskObj, reverse);});
+        }
     }
     
 //  deselect();

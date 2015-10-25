@@ -1,6 +1,7 @@
 /*jslint browser: true*/
 /*global THREE*/
 
+var fov = 20;
 var scene, raycaster, mainRenderer, mainCamera, currentBGColor;
 var renderers = [];
 var meshes = [];
@@ -20,6 +21,9 @@ function initCanvas() {
 	light = new THREE.DirectionalLight( 0xffff00, 0.75 );
 	light.position.set( 0, 0, - 1 );
 	scene.add( light );
+    
+    createAspectPlane(16/9);
+//    createAspectPlane(4/3);
     
 	var main = document.getElementById("main");
 	var rendererObj = createRenderer(main);
@@ -46,7 +50,7 @@ function createRenderer(canvas){
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize(canvas.width, canvas.height);
     
-	var camera = new THREE.PerspectiveCamera(20, canvas.width/canvas.height, 1, 10000);
+	var camera = new THREE.PerspectiveCamera(fov, canvas.width/canvas.height, 1, 10000);
     
     var save = renderers[renderers.length] = {
         renderer: renderer,
@@ -78,6 +82,26 @@ function openCanvasWindow(){
     window2.document.body.appendChild(canvas);
     changeBackgroundColor(currentBGColor);
 }
+function createAspectPlane(aspect){
+    var geometry = new THREE.Geometry();
+    geometry.vertices.push(
+        new THREE.Vector3(-aspect/2, -0.5, 0),
+        new THREE.Vector3( aspect/2, -0.5, 0),
+        new THREE.Vector3( aspect/2,  0.5, 0),
+        new THREE.Vector3(-aspect/2,  0.5, 0),
+        new THREE.Vector3(-aspect/2, -0.5, 0)
+    );
+    var material = new THREE.LineBasicMaterial({
+        color: 0x000000
+    });
+    var plane = new THREE.Line(geometry, material);
+    var planeHeight = 0.5;
+    var degToRad = Math.PI/180;
+    var alpha = (90-(fov/2))*degToRad;
+    plane.position.set(0, 0, -(Math.tan(alpha)*planeHeight));
+    scene.add(plane);
+    return plane;
+}
 
 function animate() {
 	requestAnimationFrame( animate );
@@ -91,6 +115,7 @@ function animate() {
     for(i=0; i<meshes.length; i++){
         var mesh = meshes[i];
         mesh.boundingBoxHelper.update();
+        mesh.boundingBoxHelper.scale.z = 0.01;//TODO
     }
     if(selectedMesh){
         bbox.update(selectedMesh);
