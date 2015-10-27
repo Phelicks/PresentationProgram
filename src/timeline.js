@@ -4,6 +4,7 @@
 var steps = 0;
 var currentStep = 0;
 var previousStep = 0;
+var forward = true;
 var lastStepDiv, stepInfoDiv;
 
 var zip;
@@ -94,6 +95,7 @@ function saveAll(){
     var tasks = [];
     for(var i=0; i < taskObjects.length; i++){
         var task = taskObjects[i];
+        if(task.taskType === null)continue;
 
         var taskSave = {};
         if(task.animation){
@@ -247,15 +249,25 @@ function addStep(){
     return tlStep;
 }
 function prevStep(){
-    if(currentStep > 0)currentStep--;
+    if(forward){
+        forward = false;
+    }
+    else if(currentStep > 0){
+        currentStep--;
+    }
     updateStep();
 }
 function nextStep(){
-    if(currentStep < steps-1)currentStep++;
+    if(!forward){
+        forward = true;
+    }
+    else if(currentStep < steps-1){
+        currentStep++;
+    }
     updateStep();
 }
 function updateStep(){
-    if(currentStep === previousStep)return;
+//    if(currentStep === previousStep)return;
     stepInfoDiv.innerHTML = "Current Step: " + currentStep;
     
     if(lastStepDiv)lastStepDiv.style.border = "none";
@@ -306,7 +318,7 @@ function updateStep(){
             }
             else if(task.step === currentStep){
                 task.animation.startTime = Date.now();
-                if(previousStep > currentStep){
+                if(previousStep > currentStep || !forward){
                     task.animation.onEnd();
                     activateAnimation(task, true);
                 }

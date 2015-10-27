@@ -57,16 +57,25 @@ var sliderTextField = function(mesh, name, func){
         func(p);
     };
     
+    var click = false;
     var slider = document.createElement("input");
     slider.type = "range";
     slider.min = "0";
     slider.max = "100";
     slider.value = value;
+    slider.addEventListener("mousedown", function(){
+        click = true;
+    });
     slider.addEventListener("mousemove", function(){
+        if(!click)return;
+        
         value = slider.value;
         textField.value = slider.value;
         var p = Number(value)/100;
         func(p);
+    });
+    slider.addEventListener("mouseup", function(){
+        click = false;
     });
     
     var button = createHTMLButton(name);
@@ -76,17 +85,14 @@ var sliderTextField = function(mesh, name, func){
     this.html = button;
 };
 
-var meshColorPicker = function(mesh){
+var meshColorPicker = function(mesh, func){
     var color = createHTMLButton("Color");
     var colorPick = document.createElement("input");
     colorPick.type = "text";
     color.appendChild(colorPick);
     $(colorPick).spectrum({
         color: "#f00",
-        move: function(color) {
-            mesh.material.dispose();
-            mesh.material = new THREE.MeshBasicMaterial({color: parseInt("0x"+color.toHex())});
-        }
+        move: function(c){func(c)}
     });
     
     this.html = color;
@@ -272,49 +278,54 @@ typeContainer["ov-add-symbol"] ={
         return taskType;
     }
 };
-typeContainer["ov-add-text-field"] = function(){
-    var elem = document.createElement("div");//document.querySelector('#editor');
-    elem.style.width = "128px";
-    elem.style.height = "128px";
-    elem.style.position = "absolute";
-    elem.style.top = "0px";
-    window.document.body.appendChild(elem);
+typeContainer["ov-add-text-field"] = {
+    generateMesh: function(){
+        var elem = document.createElement("div");//document.querySelector('#editor');
+        elem.style.width = "128px";
+        elem.style.height = "128px";
+        elem.style.position = "fixed";
+        elem.style.top = "0px";
+        window.document.body.appendChild(elem);
 
-    var editor = carota.editor.create(elem);
-    editor.load([
-            { text: 'Text' }
-        ]);
-    editor.select(0, 4);
+        var editor = carota.editor.create(elem);
+        editor.load([
+                { text: 'Text' }
+            ]);
+        editor.select(0, 4);
 
-    var canvas = elem.querySelector('canvas');
-    canvas.style.visibility = "hidden";
-    var selector = elem.querySelector('.carotaSpacer');
-    selector.style.border = "solid";
-    selector.style.borderWidth = "1px";
+        var canvas = elem.querySelector('canvas');
+//        canvas.style.visibility = "hidden";
+        var selector = elem.querySelector('.carotaSpacer');
+        selector.style.border = "solid";
+        selector.style.borderWidth = "1px";
 
-    var texture = new THREE.Texture(canvas);
-//    texture.minFilter = THREE.NearestFilter;
-    textures.push(texture);//TODO
+        var texture = new THREE.Texture(canvas);
+        textures.push(texture);//TODO
 
-    var material = new THREE.MeshBasicMaterial({
-        map : texture,
-        side: THREE.DoubleSide
-    });
-    material.transparent = true;
+        var material = new THREE.MeshBasicMaterial({
+            map : texture,
+            side: THREE.DoubleSide
+        });
+        material.transparent = true;
 
-    var mesh = new THREE.Mesh(new THREE.PlaneGeometry(128, 128), material);
-    mesh.doubleSided = true;
-    mesh.onClick = function(){
-        canvas.parentNode.parentNode.querySelector('textarea').focus();
-    };
+        var mesh = new THREE.Mesh(new THREE.PlaneGeometry(128, 128), material);
+        mesh.doubleSided = true;
+        mesh.onClick = function(){
+            canvas.parentNode.parentNode.querySelector('textarea').focus();
+        };
 
-    mesh.position.z = -1000;
-    
-    var taskType = {};
-    taskType.name = "Text field";
-    taskType.mesh = mesh;
-    
-    return taskType;
+        mesh.position.z = -1000;
+        
+        return mesh;
+    },
+    getTaskType: function(mesh, safe){
+
+        var taskType = {};
+        taskType.name = "Text field";
+        taskType.mesh = mesh;
+
+        return taskType;
+    }
 };
 //------- Geometrys
 typeContainer["ov-add-circle"] = {
@@ -334,9 +345,20 @@ typeContainer["ov-add-circle"] = {
         var taskType = new TaskType();
         taskType.name = "Circle";
         taskType.menu = new Menu3D(mesh);
-        taskType.menu.color = new meshColorPicker(mesh);
+        taskType.menu.color = new meshColorPicker(mesh, function(color) {
+            scope.defaultColor = parseInt("0x"+color.toHex());
+            mesh.material.dispose();
+            mesh.material = new THREE.MeshBasicMaterial({color: scope.defaultColor});
+        });
         taskType.menu.size = new sliderTextField(mesh, "Size: ", function(p){
-            mesh.geometry = new THREE.CircleGeometry(200*p, scope.defaultSegments);
+            mesh.geometry.dispose();
+            scope.defaultRadius = Math.max(0.01, 400*p);
+            mesh.geometry = new THREE.CircleGeometry(scope.defaultRadius, scope.defaultSegments);
+        });
+        taskType.menu.segments = new sliderTextField(mesh, "Segments: ", function(p){
+            mesh.geometry.dispose();
+            scope.defaultSegments = 3+p*100;
+            mesh.geometry = new THREE.CircleGeometry(scope.defaultRadius, scope.defaultSegments);
         });
 
         return taskType; 
