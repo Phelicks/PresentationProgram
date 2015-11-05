@@ -6,6 +6,9 @@ var scene, raycaster, mainRenderer, mainCamera, currentBGColor;
 var renderers = [];
 var meshes = [];
 var bboxHelper = [];
+var rotationHandles = [];
+var rotationAxis = null;
+var rotationEmpty;
 var bbox, selectedMesh, clickedMesh;
 var selection = false;
 var mouseDownStart = new THREE.Vector2();
@@ -36,9 +39,47 @@ function initCanvas() {
 	rendererObj.canvas.addEventListener( 'mousedown', onCanvasMouseDown, true );
 	rendererObj.canvas.addEventListener( 'mousemove', onCanvasMouseMove, true );
 	rendererObj.canvas.addEventListener( 'mouseup', onCanvasMouseUp, true );
-//	rendererObj.canvas.addEventListener( 'touchstart', onCanvasTouchStart, false ); //TODO
+    
+	rendererObj.canvas.addEventListener( 'touchstart', onCanvasTouchStart, false );
+	rendererObj.canvas.addEventListener( 'touchmove', onCanvasTouchMove, false );
+	rendererObj.canvas.addEventListener( 'touchend', onCanvasTouchEnd, false );
     changeBackgroundColor(0x87CEFA);
 	animate();
+    
+    var geometry = new THREE.TorusGeometry( 100, 3, 16, 100 );
+    var red = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+    var green = new THREE.MeshBasicMaterial( { color: 0x00FF00 } );
+    var blue = new THREE.MeshBasicMaterial( { color: 0x0000FF } );
+    
+    rotationEmpty = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100), new THREE.MeshNormalMaterial());
+    rotationEmpty.material.visible = false;
+    scene.add(rotationEmpty);
+    rotationEmpty.visible = false;
+    rotationEmpty.hide = true;
+    
+    
+    var rotationHandle = new THREE.Mesh( geometry, blue );
+    rotationHandle.rotationAxis = new THREE.Vector3(0, 0, 1);
+    rotationEmpty.add(rotationHandle);
+    rotationHandles.push(rotationHandle);
+    
+    rotationHandle = new THREE.Mesh( geometry, green );
+    rotationHandle.rotationAxis = new THREE.Vector3(1, 0, 0);
+    rotationHandle.rotation.y = Math.PI/2;
+    rotationEmpty.add(rotationHandle);
+    rotationHandles.push(rotationHandle);
+    
+    rotationHandle = new THREE.Mesh( geometry, red );
+    rotationHandle.rotationAxis = new THREE.Vector3(0, 1, 0);
+    rotationHandle.rotation.x = Math.PI/2;
+    rotationEmpty.add(rotationHandle);
+    rotationHandles.push(rotationHandle);
+    
+    var rButton = document.querySelector("#rotation-button");
+    rButton.onclick = function(){
+        rotationEmpty.visible = !rotationEmpty.visible;
+        rotationEmpty.hide = !rotationEmpty.visible;
+    };
 }
 function createRenderer(canvas){
     //TODO delete renderer
@@ -114,6 +155,7 @@ function animate() {
     // update scene
     for(i=0; i<meshes.length; i++){
         var mesh = meshes[i];
+        if(!mesh.boundingBoxHelper)continue;
         mesh.boundingBoxHelper.update();
         mesh.boundingBoxHelper.scale.z = 0.01;//TODO
     }
@@ -149,26 +191,23 @@ function onWindowResize(){
         renderer.setSize(canvas.width, canvas.height);
     }
 }
-function onCanvasTouchStart( event ) {
-	event.preventDefault();
-	
-	event.clientX = event.touches[0].clientX;
-	event.clientY = event.touches[0].clientY;
-	onCanvasMouseDown( event );
-}
+
+//Input
 function onCanvasMouseDown( event ) {
-	event.preventDefault();
+    var dpi = window.devicePixelRatio || 1;
     mouseDownStart.x = event.offsetX;
     mouseDownStart.y = event.offsetY;
     
     var mouse = new THREE.Vector2();
-	mouse.x =  (event.offsetX / mainRenderer.domElement.width ) * 2 - 1;
-	mouse.y = -(event.offsetY / mainRenderer.domElement.height) * 2 + 1;
+	mouse.x =  (event.offsetX / (mainRenderer.domElement.width  / dpi)) * 2 - 1;
+	mouse.y = -(event.offsetY / (mainRenderer.domElement.height / dpi)) * 2 + 1;
     
     getObjectSelection(mouse);
+	event.preventDefault();
 }
 function onCanvasMouseUp(event){
     clickedMesh = undefined;
+    rotationAxis = null;
     selection = false;
 }
 function onCanvasMouseMove(event){
@@ -180,28 +219,78 @@ function onCanvasMouseMove(event){
         clickedMesh.position.set(oP.x + (x-mouseDownStart.x)/1.4, oP.y - (y-mouseDownStart.y)/1.4, oP.z);//TODO 1.4
         select(clickedMesh);
         onMeshChange(clickedMesh);
+        
+        if(rotationEmpty){
+            rotationEmpty.position.set(clickedMesh.position.x, clickedMesh.position.y, clickedMesh.position.z);
+        }
+    }
+    else if(selectedMesh && rotationAxis){
+        var x = event.offsetX - mouseDownStart.x;
+        var y = event.offsetY - mouseDownStart.y;
+        var d = Math.sqrt(x*x + y*y);
+        if(x < 0 || y < 0) d = -d;
+        
+        rotationEmpty.rotateOnAxis(rotationAxis, d*(Math.PI/180)/360);
+        selectedMesh.rotateOnAxis(rotationAxis, d*(Math.PI/180)/360);
     }
 }
-function getObjectSelection(point){
-    clickedMesh = getObjectOn(point);
-    if(clickedMesh){
-        var p = clickedMesh.position;
-        clickedMesh.originalPosition = new THREE.Vector3(p.x, p.y, p.z);
+
+function onCanvasTouchStart( event ) {
+    var dpi = window.devicePixelRatio || 1;
     
-        selectionOnCanvas(clickedMesh);
-        select(clickedMesh);
+    var t = event.touches[0];
+	event.offsetX = t.clientX - t.target.getBoundingClientRect().top  / dpi;
+	event.offsetY = t.clientY - t.target.getBoundingClientRect().left / dpi;
+	onCanvasMouseDown( event );
+	
+    event.preventDefault();
+}
+function onCanvasTouchMove(event) {
+    var dpi = window.devicePixelRatio || 1;
+    
+    var t = event.touches[0];
+	event.offsetX = t.clientX - t.target.getBoundingClientRect().top  / dpi;
+	event.offsetY = t.clientY - t.target.getBoundingClientRect().left / dpi;
+	onCanvasMouseMove(event);
+	
+    event.preventDefault();
+}
+function onCanvasTouchEnd(event) {
+    onCanvasMouseUp(event);
+}
+
+function getObjectSelection(point){
+    var mesh = getObjectOn(point, bboxHelper);
+    if(mesh)mesh = mesh.object;
+    var clickedRotation = getObjectOn(point, rotationHandles);
+    if(clickedRotation && !clickedRotation.parent.visible)clickedRotation = null;
+    
+    if(mesh && !clickedRotation){
+        var p = mesh.position;
+        mesh.originalPosition = new THREE.Vector3(p.x, p.y, p.z);
+    
+        selectionOnCanvas(mesh);
+        select(mesh);
+        clickedMesh = mesh;
+        rotationAxis = null;
+    }
+    else if(clickedRotation && selectedMesh){
+        rotationAxis = clickedRotation.rotationAxis;
     }
     else{
+        clickedMesh = null;
+        rotationAxis = null;
         deselect();
         deselectionOnCanvas();
     }
+    
 }
-function getObjectOn(point){
+function getObjectOn(point, meshContainer){
     raycaster.setFromCamera(point, mainCamera);
-	var intersects = raycaster.intersectObjects(bboxHelper);
+	var intersects = raycaster.intersectObjects(meshContainer);
 
 	if (intersects.length > 0) {
-        return intersects[0].object.object;
+        return intersects[0].object;
 	}
     return null;
 }
@@ -264,9 +353,16 @@ function select(mesh){
     //TODO if(mesh.onClicked){mesh.onClicked();}
     
     selectedMesh = mesh;
+    
+//    THREE.SceneUtils.detach(rotationEmpty, rotationEmpty.parent, scene);
+//    THREE.SceneUtils.attach(rotationEmpty, scene, mesh);
+    rotationEmpty.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
+    rotationEmpty.rotation.set(mesh.rotation.x, mesh.rotation.y, mesh.rotation.z);
+    if(!rotationEmpty.hide)rotationEmpty.visible = true;
 }
 function deselect(){
     if(!bbox || !bbox.visible)return;
     selectedMesh = undefined;
     bbox.visible = false;
+    if(!rotationEmpty.hide)rotationEmpty.visible = false;
 }
