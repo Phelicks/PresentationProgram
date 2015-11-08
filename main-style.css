@@ -146,4 +146,19 @@ body {
     margin-left: -37.5%;
     background-color: white;
     z-index: 101;
+    padding: 2em;
+    
+    overflow: scroll;
+    
+}
+
+.add-category{
+    clear: both;
+}
+
+.add-card.mdl-card{
+    width: 10em;
+    margin: 1em;
+    float: left;
+    cursor: pointer;
 }

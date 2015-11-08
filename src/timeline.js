@@ -50,7 +50,21 @@ function initTaskTypes(){
     }
 }
 function setTaskType(id, taskTypeContainer){
-    var domElement = document.getElementById(id);
+//    var domElement = document.getElementById(id);
+    var domElement = document.createElement("div");
+    domElement.innerHTML = "" +
+        "<div id='ov-add-text' class='add-card mdl-card mdl-shadow--2dp'>" +
+          "<div class='mdl-card__title mdl-card--expand'>" +
+            "<h2 class='mdl-card__title-text'>"+taskTypeContainer.meta.name +"</h2>" +
+          "</div>" +
+          "<div class='mdl-card__supporting-text'>" +
+            taskTypeContainer.meta.description +
+          "</div>" +
+        "</div>";
+    var overlay = document.getElementById("add-category-"+taskTypeContainer.meta.category);
+    overlay.appendChild(domElement);
+    
+    
     if(!typeCount[id])typeCount[id] = 1;
     domElement.onclick = function(){
         var tt;
@@ -93,7 +107,7 @@ function openSettings(){
 
 //Step management
 function addStep(){
-    
+    //Create a new step element
     var tlStep = document.createElement("div");
     tlStep.id = "tl-step-"+(steps);
     tlStep.stepID = steps;
@@ -105,20 +119,21 @@ function addStep(){
     
     steps++;
     
+    //Create
     var addElement = tlStep.querySelector("a");
     addElement.onclick = function(){addTask(tlStep);};
-    addElement.parentElement.ondragenter = function(e){
+    addElement.ondragenter = function(e){
         var target = e.target;
         var step = target.parentNode;
         step.insertBefore(draggedTaskDiv, target);
         event.preventDefault();//TODO check for right element
     };
-    addElement.parentElement.ondragover = function(e){
+    addElement.ondragover = function(e){
         event.preventDefault();//TODO check for right element
     };
     
     //Add an empty Task
-    addTask(tlStep);
+//    addTask(tlStep);
     
     var container = document.getElementById("el-container");
     container.insertBefore(tlStep, container.lastElementChild);
@@ -155,11 +170,12 @@ function updateStep(){
     lastStepDiv = currentStepDiv;
     
     //Update steps
-    //---->c<--
+    //---->current<---
     var i=0;
     var task = null;
     var lastTask = null;
 
+    //---->c
     while(i < taskObjects.length){
         task = taskObjects[i];
         if(task.step >= currentStep){
@@ -171,7 +187,7 @@ function updateStep(){
             i++;
         }
     }
-    
+    //     c<--- 
     i = (taskObjects.length-1);
     while(lastTask && i >= 0){
         task = taskObjects[i];
@@ -182,43 +198,44 @@ function updateStep(){
         }
     }
     
-    function updateTask(task){
-        //Task is an Animation
-        if(task.animation){
-            if(currentStep < task.step){
-                task.animation.onStart();
-                task.animation.onLoop(0);
-            }
-            else if(currentStep > task.step){
-                task.animation.onLoop(1);
-                task.animation.onEnd();                
-            }
-            else if(task.step === currentStep){
-                task.animation.startTime = Date.now();
-                if(previousStep > currentStep || !forward){
-                    task.animation.onEnd();
-                    activateAnimation(task, true);
-                }
-                else{
-                    task.animation.onStart();
-                    activateAnimation(task, false);
-                }
-            }
+    previousStep = currentStep;
+}
+function updateTask(task){
+    //Task is an Animation
+    if(task.animation){
+        if(currentStep < task.step){
+            task.animation.onStart();
+            task.animation.onLoop(0);
         }
-        //Task is an Mesh
-        else if(task.mesh){
-            var removed = Boolean(task.mesh.removeOnStep) && task.mesh.removeOnStep <= currentStep;
-            if(task.step <= currentStep && !removed){
-                task.mesh.setVisible(true);
+        else if(currentStep > task.step){
+            task.animation.onLoop(1);
+            task.animation.onEnd();                
+        }
+        else if(task.step === currentStep){
+            task.animation.startTime = Date.now();
+            if(previousStep > currentStep || !forward){
+                task.animation.onEnd();
+                activateAnimation(task, true);
             }
             else{
-                if(clickedTask.mesh && task.mesh === clickedTask.mesh)deselect();
-                task.mesh.setVisible(false);
+                task.animation.onStart();
+                activateAnimation(task, false);
             }
         }
     }
-    previousStep = currentStep;
+    //Task is an Mesh
+    else if(task.mesh){
+        var removed = Boolean(task.mesh.removeOnStep) && task.mesh.removeOnStep <= currentStep;
+        if(task.step <= currentStep && !removed){
+            task.mesh.setVisible(true);
+        }
+        else{
+            if(clickedTask.mesh && task.mesh === clickedTask.mesh)deselect();
+            task.mesh.setVisible(false);
+        }
+    }
 }
+
 function activateAnimation(taskObj, reverse){
     if(currentStep !== taskObj.step)return;
     

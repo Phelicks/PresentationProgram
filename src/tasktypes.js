@@ -103,6 +103,11 @@ var meshColorPicker = function(mesh, func){
 var typeContainer = {};
 //------- Text
 typeContainer["ov-add-text"] ={
+    meta:{
+        category: "text",
+        name: "Text",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+    },
     generateMesh: function(){
         var geometry = new THREE.TextGeometry("Text", {size: 50, height: 0.01});
         var material = new THREE.MeshBasicMaterial({color: Math.random() * 0xffffff});
@@ -177,6 +182,11 @@ typeContainer["ov-add-text"] ={
     }
 };
 typeContainer["ov-add-symbol"] ={
+    meta:{
+        category: "text",
+        name: "Symbol",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+    },
     standartSize: 50,
     standartColor: Math.random() * 0xffffff,
     generateMesh: function(){
@@ -282,6 +292,11 @@ typeContainer["ov-add-symbol"] ={
     }
 };
 typeContainer["ov-add-text-field"] = {
+    meta:{
+        category: "text",
+        name: "Text field",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+    },
     generateMesh: function(){
         var elem = document.createElement("div");//document.querySelector('#editor');
         elem.style.width = "128px";
@@ -332,6 +347,11 @@ typeContainer["ov-add-text-field"] = {
 };
 //------- Geometrys
 typeContainer["ov-add-circle"] = {
+    meta:{
+        category: "geometry",
+        name: "Circle",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+    },
     defaultRadius: 100,
     defaultSegments: 32,
     defaultColor: Math.random()*0xFFFFFF,
@@ -368,6 +388,11 @@ typeContainer["ov-add-circle"] = {
     }
 };
 typeContainer["ov-add-cube"] = {
+    meta:{
+        category: "geometry",
+        name: "Cube",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+    },
     generateMesh: function(){
         var geometry = new THREE.BoxGeometry( 100, 100, 100 );
         var material = new THREE.MeshNormalMaterial();
@@ -385,6 +410,11 @@ typeContainer["ov-add-cube"] = {
 };
 //------- Animations
 typeContainer["ov-add-aniamtion"] = {
+    meta:{
+        category: "animation",
+        name: "Animation",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+    },
     isAnimation: true,
     getTaskType: function(safe){
         //Create TaskType Object and TaskMenu
@@ -495,6 +525,11 @@ typeContainer["ov-add-aniamtion"] = {
     }
 };
 typeContainer["ov-add-aniamtion2"] = {
+    meta:{
+        category: "animation",
+        name: "Animation2",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+    },
     isAnimation: true,
     aniCollection: [],
     getTaskType: function(safe){
@@ -617,6 +652,11 @@ typeContainer["ov-add-aniamtion2"] = {
 };
 //------- Remove
 typeContainer["ov-remove"] = {
+    meta:{
+        category: "remove",
+        name: "Remove",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+    },
     getTaskType: function(safe){
         var button = createHTMLButton("3D Object: ");
         var select = document.createElement("select");
