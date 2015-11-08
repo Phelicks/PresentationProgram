@@ -12,5 +12,5 @@ function init() {
     initTaskMenu();
     
 	//
-//    addStep();
+    addStep();
 }

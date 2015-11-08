@@ -78,6 +78,7 @@ function parseSave(f){
     for(i=0; i <= highestStep; i++){
         steps.push(addStep());
     }
+    
     //Create tasks
     for(i=0; i < tasks.length; i++){
         task = tasks[i];

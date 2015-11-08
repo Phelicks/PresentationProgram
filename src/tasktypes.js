@@ -1,8 +1,6 @@
 /*jslint browser: true*/
 /*global THREE, EasingFunctions*/
 
-var typeContainer = {};
-
 var TaskType = function(){
     this.menu = {};
 };
@@ -45,6 +43,9 @@ var Menu3D = function(mesh){
     this.depth = {
         html: button
     };
+    this.rotation = {
+        html: document.querySelector("#rotation-button")
+    }
 };
 var sliderTextField = function(mesh, name, func){
     var value = 50;
@@ -98,6 +99,8 @@ var meshColorPicker = function(mesh, func){
     this.html = color;
 };
 
+
+var typeContainer = {};
 //------- Text
 typeContainer["ov-add-text"] ={
     generateMesh: function(){
@@ -730,7 +733,7 @@ typeContainer["ov-remove"] = {
 
 function createHTMLButton(text){
     var div = document.createElement("div");
-    div.className = "task-menu-button";
+    div.className = "mdl-button mdl-js-button mdl-button--raised mdl-button--colored task-menu-button";
     if(text)div.innerHTML = text;
     return div;
 }

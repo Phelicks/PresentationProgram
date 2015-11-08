@@ -5,18 +5,19 @@ var position = 0;
 
 function initTaskMenu(){
     domElement = document.getElementById("task-menu");
-    updatePosition(-domElement.clientHeight);
+    var trans = "translate(0px, -200px)"
+    domElement.style.transform = trans;
+    domElement.style.webkitProperty = trans;
+    domElement.style.MozProperty = trans;
+    domElement.style.msProperty = trans;
+    domElement.style.OProperty = trans; 
 }
 
 //Animation
 function taskMenuOpen(taskObj){
     if(!taskObj.taskType)return;
     
-    var children = domElement.childNodes;
-    for(var i=0; i<children.length;i++){
-        var child = children[i];
-        child.style.display = "none";
-    }
+    hideTaskMenuButtons();
     
     var elements = taskObj.taskType.menu;
     for(var type in elements){
@@ -28,30 +29,34 @@ function taskMenuOpen(taskObj){
         }
     }
     
-    upAnimation();
+    showAnimation();
 }
 function taskMenuClose(){
-    downAnimation();
+    hideAnimation();
+//    hideTaskMenuButtons();
 }
-function upAnimation(){
-    updatePosition(position+5);
-    
-    if(position < 0){
-        requestAnimationFrame(upAnimation);
-    }else{
-        updatePosition(0);
+
+function showAnimation(){
+    var trans = "translate(0px, 0px)"
+    domElement.style.transform = trans;
+    domElement.style.webkitProperty = trans;
+    domElement.style.MozProperty = trans;
+    domElement.style.msProperty = trans;
+    domElement.style.OProperty = trans;
+}
+function hideAnimation(){
+    var trans = "translate(0px, -"+domElement.clientHeight+"px)"
+    domElement.style.transform = trans;
+    domElement.style.webkitProperty = trans;
+    domElement.style.MozProperty = trans;
+    domElement.style.msProperty = trans;
+    domElement.style.OProperty = trans;   
+}
+
+function hideTaskMenuButtons(){
+    var children = domElement.children;
+    for(var i=0; i<children.length;i++){
+        var child = children[i];
+        child.style.display = "none";
     }
-}
-function downAnimation(){
-    updatePosition(position-5);
-    
-    if(Math.abs(position) < domElement.clientHeight){
-        requestAnimationFrame(downAnimation);
-    }else{
-        updatePosition(-domElement.clientHeight);
-    }
-}
-function updatePosition(pos){
-    position = pos;
-    domElement.style.bottom = position+"px";
 }

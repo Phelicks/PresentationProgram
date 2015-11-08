@@ -5,7 +5,7 @@ var steps = 0;
 var currentStep = 0;
 var previousStep = 0;
 var forward = true;
-var lastStepDiv, stepInfoDiv;
+var lastStepDiv;
 
 var zip;
 var taskObjects = [];
@@ -19,6 +19,8 @@ var addDialog       = "ov-add-dialog";
 var selectionDialog = "ov-selection-dialog";
 var settingsDialog  = "ov-settings-dialog";
 
+var taskClass = "mdl-button mdl-js-button mdl-button--raised mdl-button--accent tl-element";
+
 function initTimeline() {
     var addStepDiv = document.getElementById("tl-add");
     addStepDiv.onclick = addStep;
@@ -27,7 +29,6 @@ function initTimeline() {
     prevStepDiv.onclick = prevStep;
     var nextStepDiv = document.getElementById("next-step");
     nextStepDiv.onclick = nextStep;
-    stepInfoDiv = document.getElementById("info-current-step");
     
     var overlay = document.getElementById("overlay-black");
     overlay.onclick = hideOverlay;
@@ -92,33 +93,35 @@ function openSettings(){
 
 //Step management
 function addStep(){
+    
     var tlStep = document.createElement("div");
-    tlStep.className = "tl-step";
     tlStep.id = "tl-step-"+(steps);
-    tlStep.innerHTML = "Step " + steps;
     tlStep.stepID = steps;
+    tlStep.className = "tl-step mdl-card mdl-shadow--2dp";
+    tlStep.innerHTML = "<div>Step " + steps + "</div>" +
+        "<a class='mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect'>" +
+            "<i class='material-icons'>add</i>" +
+        "</a>";
+    
     steps++;
     
-    var addElement = document.createElement("div");
-    addElement.className = "tl-element";
-    addElement.innerHTML = "+";
-    addElement.style.background = "white";
+    var addElement = tlStep.querySelector("a");
     addElement.onclick = function(){addTask(tlStep);};
-    addElement.ondragenter = function(e){
+    addElement.parentElement.ondragenter = function(e){
         var target = e.target;
         var step = target.parentNode;
         step.insertBefore(draggedTaskDiv, target);
         event.preventDefault();//TODO check for right element
     };
-    addElement.ondragover = function(e){
+    addElement.parentElement.ondragover = function(e){
         event.preventDefault();//TODO check for right element
     };
-    tlStep.appendChild(addElement);
     
     //Add an empty Task
-//    addTask(tlStep);
+    addTask(tlStep);
     
-    document.getElementById("el-container").appendChild(tlStep);
+    var container = document.getElementById("el-container");
+    container.insertBefore(tlStep, container.lastElementChild);
     currentStep = tlStep.stepID;
     updateStep();
     return tlStep;
@@ -143,7 +146,6 @@ function nextStep(){
 }
 function updateStep(){
 //    if(currentStep === previousStep)return;
-    stepInfoDiv.innerHTML = "Current Step: " + currentStep;
     
     if(lastStepDiv)lastStepDiv.style.border = "none";
     var currentStepDiv = document.getElementById("tl-step-"+currentStep);
@@ -256,7 +258,7 @@ function activateAnimation(taskObj, reverse){
 
 //Task management
 function addTask(tlStep){
-    var taskDiv = document.createElement("div");
+    var taskDiv = document.createElement("button");
     
     var taskObj = taskObjects[taskObjects.length] = {
         id: taskIDs++,
@@ -267,7 +269,7 @@ function addTask(tlStep){
         htmlElement: taskDiv
     };
     
-    taskDiv.className = "tl-element";
+    taskDiv.className = taskClass;
     taskDiv.id = taskDivName+taskObj.id;
     taskDiv.onclick = function(){onTaskClicked(taskObj);};
     taskDiv.oncontextmenu = function(){
@@ -282,7 +284,7 @@ function addTask(tlStep){
     
     taskDiv.ondragstart = function(e){
         draggedTaskDiv = e.target;
-        e.target.className = "tl-element-ph";
+        e.target.className = taskClass + " drag";
         taskMenuClose();
     };
     taskDiv.ondragenter = function(e){
@@ -305,11 +307,11 @@ function addTask(tlStep){
         updateAllTaskTypes();
     };
     taskDiv.ondragend = function(e){
-        e.target.className = "tl-element";
+        e.target.className = taskClass;
         draggedTaskDiv = undefined;
     };
     
-    tlStep.insertBefore(taskDiv, tlStep.lastChild);
+    tlStep.insertBefore(taskDiv, tlStep.lastElementChild);
     return taskObj;
 }
 function addTaskToMesh(mesh, task){

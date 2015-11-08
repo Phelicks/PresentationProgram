@@ -28,7 +28,7 @@ function initCanvas() {
     createAspectPlane(16/9);
 //    createAspectPlane(4/3);
     
-	var main = document.getElementById("main");
+	var main = document.getElementById("main-canvas");
 	var rendererObj = createRenderer(main);
     mainRenderer = rendererObj.renderer;
     mainCamera = rendererObj.camera;
@@ -43,7 +43,7 @@ function initCanvas() {
 	rendererObj.canvas.addEventListener( 'touchstart', onCanvasTouchStart, false );
 	rendererObj.canvas.addEventListener( 'touchmove', onCanvasTouchMove, false );
 	rendererObj.canvas.addEventListener( 'touchend', onCanvasTouchEnd, false );
-    changeBackgroundColor(0x87CEFA);
+    changeBackgroundColor(0xFFFFFF);
 	animate();
     
     var geometry = new THREE.TorusGeometry( 100, 3, 16, 100 );
@@ -76,6 +76,7 @@ function initCanvas() {
     rotationHandles.push(rotationHandle);
     
     var rButton = document.querySelector("#rotation-button");
+    rButton.style.display = "none";
     rButton.onclick = function(){
         rotationEmpty.visible = !rotationEmpty.visible;
         rotationEmpty.hide = !rotationEmpty.visible;
@@ -199,8 +200,8 @@ function onCanvasMouseDown( event ) {
     mouseDownStart.y = event.offsetY;
     
     var mouse = new THREE.Vector2();
-	mouse.x =  (event.offsetX / (mainRenderer.domElement.width  / dpi)) * 2 - 1;
-	mouse.y = -(event.offsetY / (mainRenderer.domElement.height / dpi)) * 2 + 1;
+	mouse.x =  (event.offsetX / (mainRenderer.domElement.clientWidth  )) * 2 - 1;
+	mouse.y = -(event.offsetY / (mainRenderer.domElement.clientHeight )) * 2 + 1;
     
     getObjectSelection(mouse);
 	event.preventDefault();
@@ -239,8 +240,8 @@ function onCanvasTouchStart( event ) {
     var dpi = window.devicePixelRatio || 1;
     
     var t = event.touches[0];
-	event.offsetX = t.clientX - t.target.getBoundingClientRect().top  / dpi;
-	event.offsetY = t.clientY - t.target.getBoundingClientRect().left / dpi;
+	event.offsetX = t.clientX - t.target.getBoundingClientRect().left;
+	event.offsetY = t.clientY - t.target.getBoundingClientRect().top;
 	onCanvasMouseDown( event );
 	
     event.preventDefault();
@@ -249,8 +250,8 @@ function onCanvasTouchMove(event) {
     var dpi = window.devicePixelRatio || 1;
     
     var t = event.touches[0];
-	event.offsetX = t.clientX - t.target.getBoundingClientRect().top  / dpi;
-	event.offsetY = t.clientY - t.target.getBoundingClientRect().left / dpi;
+	event.offsetX = t.clientX - t.target.getBoundingClientRect().left;
+	event.offsetY = t.clientY - t.target.getBoundingClientRect().top;
 	onCanvasMouseMove(event);
 	
     event.preventDefault();
