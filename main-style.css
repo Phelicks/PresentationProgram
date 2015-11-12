@@ -4,32 +4,11 @@ body {
     overflow: hidden;
 }
 
-.top-menu-button{
-    cursor: pointer;
-    height: 2em;
-    padding-left: 0.5em;
-    padding-right: 0.5em;
-    margin: 0.2em;
-    background: crimson;
-    color: white;
-    float: left;
-    text-align: center;
-}
-
 #canvas-container{
     height: 50vh;
     width: 100%;
-    margin-top: 1em;
+    margin-top: 1vh;
     z-index: 10;
-}
-
-.tl-menu-step{
-    width: 2em;
-    height: 2em;
-    background-color: crimson;
-    border: solid;
-    border-width: 1px;
-    float: left;
 }
 
 #timeline{
@@ -38,7 +17,7 @@ body {
     overflow: auto;
     white-space: nowrap;
 
-    padding: 0.5em;
+    padding: 0 7px;
 }
 
 #timeline-container{
@@ -49,24 +28,25 @@ body {
 
 #el-container{
     float: left;
+    height: 90%;
+    padding-top: 5px;
 }
 
 .tl-step.mdl-card{
-    width: 10em;
-    min-height: 10em;
+    width: 9em;
+    min-height: 100%;
     display: inline-block;
     vertical-align: top;
     text-align: center;
-    margin: 0.2em;
+    margin: 4px;
     white-space: normal;
-    padding: 0.5em 0;
+    padding: 8px 0;
 }
 
 .tl-element{
     display: block !important;
-    margin: 0.2em auto;
-    width: 8em;
-    height 2em;
+    margin: 2px auto;
+    width: 80%;
 }
 
 .drag{
@@ -75,13 +55,12 @@ body {
 
 #tl-add{
     opacity: 0.4;
-    padding-top: 3.5em;
 }
 
 #task-menu{
     background-color: #c0c0c0;
     display: inline-block;
-    padding: 0.5em;
+    padding: 3px;
     padding-top: 0;
     z-index: -10;
     
@@ -93,8 +72,8 @@ body {
 
 .task-menu-button{
     float: left;
-    padding: 0.5em;
-    margin: 0.5em;
+    padding: 4px;
+    margin: 4px;
 }
 
 .file-upload {

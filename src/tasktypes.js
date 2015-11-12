@@ -10,6 +10,7 @@ TaskType.prototype = {
     name: "name",
     menu: null,
     
+    onUpdate: function(){},
     onDelete: function(){}
 };
 

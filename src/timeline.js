@@ -5,30 +5,47 @@ var steps = 0;
 var currentStep = 0;
 var previousStep = 0;
 var forward = true;
+var lastWasForward = true;
 var lastStepDiv;
 
 var zip;
 var taskObjects = [];
 var taskIDs = 0;
-var taskDivName = "tl-task-";
 var draggedTaskDiv, clickedTask, selectedTask;
 var highlightedTasks = [];
 var typeCount = [];
+var activeAnimations = 0;
 
 var addDialog       = "ov-add-dialog";
 var selectionDialog = "ov-selection-dialog";
 var settingsDialog  = "ov-settings-dialog";
 
-var taskClass = "mdl-button mdl-js-button mdl-button--raised mdl-button--accent tl-element";
+var stepClassName = "tl-step mdl-card mdl-shadow--2dp";
+var stepIDprefix = "tl-step-";
+var stepContent = function(number){return"<div>Step " + number + "</div>" +
+        "<a class='mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect'>" +
+            "<i class='material-icons'>add</i>" +
+        "</a>";};
+var stepContainerIDName = "el-container";
+
+var taskDivName = "tl-task-";
+var taskClassName = "mdl-button mdl-js-button mdl-button--raised mdl-button--accent tl-element";
+var taskClassNameDrag = taskClassName  + " drag";
 
 function initTimeline() {
     var addStepDiv = document.getElementById("tl-add");
     addStepDiv.onclick = addStep;
     
     var prevStepDiv = document.getElementById("prev-step");
-    prevStepDiv.onclick = prevStep;
+    prevStepDiv.onclick = function(){
+        forward = false;
+        prevStep();
+    }
     var nextStepDiv = document.getElementById("next-step");
-    nextStepDiv.onclick = nextStep;
+    nextStepDiv.onclick = function(){
+        forward = true;
+        nextStep();
+    }
     
     var overlay = document.getElementById("overlay-black");
     overlay.onclick = hideOverlay;
@@ -109,23 +126,18 @@ function openSettings(){
 function addStep(){
     //Create a new step element
     var tlStep = document.createElement("div");
-    tlStep.id = "tl-step-"+(steps);
+    tlStep.id = stepIDprefix+(steps);
     tlStep.stepID = steps;
-    tlStep.className = "tl-step mdl-card mdl-shadow--2dp";
-    tlStep.innerHTML = "<div>Step " + steps + "</div>" +
-        "<a class='mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect'>" +
-            "<i class='material-icons'>add</i>" +
-        "</a>";
-    
+    tlStep.className = stepClassName;
+    tlStep.innerHTML = stepContent(steps);
     steps++;
     
     //Create
     var addElement = tlStep.querySelector("a");
+    
     addElement.onclick = function(){addTask(tlStep);};
     addElement.ondragenter = function(e){
-        var target = e.target;
-        var step = target.parentNode;
-        step.insertBefore(draggedTaskDiv, target);
+        addElement.parentNode.insertBefore(draggedTaskDiv, addElement);
         event.preventDefault();//TODO check for right element
     };
     addElement.ondragover = function(e){
@@ -135,40 +147,30 @@ function addStep(){
     //Add an empty Task
 //    addTask(tlStep);
     
-    var container = document.getElementById("el-container");
+    var container = document.getElementById(stepContainerIDName);
     container.insertBefore(tlStep, container.lastElementChild);
     currentStep = tlStep.stepID;
     updateStep();
     return tlStep;
 }
 function prevStep(){
-    if(forward){
-        forward = false;
-    }
-    else if(currentStep > 0){
+    if(currentStep === 0)return;
+    if(currentStep > 0 && !lastWasForward){
         currentStep--;
     }
     updateStep();
+    lastWasForward = false;
 }
 function nextStep(){
-    if(!forward){
-        forward = true;
-    }
-    else if(currentStep < steps-1){
+    if(currentStep === (steps-1))return;
+    if(currentStep < steps-1 && lastWasForward){
         currentStep++;
     }
     updateStep();
+    lastWasForward = true;
 }
 function updateStep(){
-//    if(currentStep === previousStep)return;
-    
-    if(lastStepDiv)lastStepDiv.style.border = "none";
-    var currentStepDiv = document.getElementById("tl-step-"+currentStep);
-    currentStepDiv.style.border = "solid";
-    currentStepDiv.style.borderWidth = "1px";
-    currentStepDiv.style.borderColor = "#FF0000";
-    lastStepDiv = currentStepDiv;
-    
+    updateStepStyle();
     //Update steps
     //---->current<---
     var i=0;
@@ -200,6 +202,14 @@ function updateStep(){
     
     previousStep = currentStep;
 }
+function updateStepStyle(){
+    if(lastStepDiv)lastStepDiv.style.border = "none";
+    var currentStepDiv = document.getElementById(stepIDprefix+currentStep);
+    currentStepDiv.style.border = "solid";
+    currentStepDiv.style.borderWidth = "1px";
+    currentStepDiv.style.borderColor = "#FF0000";
+    lastStepDiv = currentStepDiv;
+}
 function updateTask(task){
     //Task is an Animation
     if(task.animation){
@@ -213,13 +223,15 @@ function updateTask(task){
         }
         else if(task.step === currentStep){
             task.animation.startTime = Date.now();
-            if(previousStep > currentStep || !forward){
+            if(!forward){//previousStep > currentStep || 
                 task.animation.onEnd();
                 activateAnimation(task, true);
+                activeAnimations++;
             }
             else{
                 task.animation.onStart();
                 activateAnimation(task, false);
+                activeAnimations++;
             }
         }
     }
@@ -237,15 +249,13 @@ function updateTask(task){
 }
 
 function activateAnimation(taskObj, reverse){
-    if(currentStep !== taskObj.step)return;
-    
     var mesh = taskObj.mesh;
     var ani = taskObj.animation;
     var duration = Date.now() - ani.startTime;
     var p = reverse ? 1.0-(duration/ani.duration) : (duration/ani.duration);
     var active = (p >= 0) && (p <= 1);
         
-    if(active){
+    if(active && currentStep === taskObj.step){
         p = ani.easing ? ani.easing(p) : p;
         ani.onLoop(p);
         window.requestAnimationFrame(function(){activateAnimation(taskObj, reverse);});
@@ -257,6 +267,14 @@ function activateAnimation(taskObj, reverse){
         else{
             ani.onEnd();
         }
+        
+        activeAnimations--;
+        if(activeAnimations === 0 && !forward && currentStep !== 0){
+            currentStep += -1;
+            updateStepStyle();
+            lastWasForward = true;
+        }
+        
         if(ani.loop){
             ani.startTime = Date.now();
             if(reverse){
@@ -266,6 +284,7 @@ function activateAnimation(taskObj, reverse){
                 ani.onStart();
             }
             window.requestAnimationFrame(function(){activateAnimation(taskObj, reverse);});
+            activeAnimations++;
         }
     }
     
@@ -286,7 +305,7 @@ function addTask(tlStep){
         htmlElement: taskDiv
     };
     
-    taskDiv.className = taskClass;
+    taskDiv.className = taskClassName;
     taskDiv.id = taskDivName+taskObj.id;
     taskDiv.onclick = function(){onTaskClicked(taskObj);};
     taskDiv.oncontextmenu = function(){
@@ -301,30 +320,28 @@ function addTask(tlStep){
     
     taskDiv.ondragstart = function(e){
         draggedTaskDiv = e.target;
-        e.target.className = taskClass + " drag";
+        e.target.className = taskClassNameDrag;
         taskMenuClose();
     };
     taskDiv.ondragenter = function(e){
         var target = e.target;
         var step = target.parentNode;
         step.insertBefore(draggedTaskDiv, target);
-        event.preventDefault();//TODO check for right element
+        //TODO check for right element
+        event.preventDefault();
     };
     taskDiv.ondragover = function(e){
         //TODO check for right element
         event.preventDefault();
     };
     taskDiv.ondrop = function(e){
-        var target = e.target;
-        var step = target.parentNode;
-        step.insertBefore(draggedTaskDiv, target);
         taskObj.step = draggedTaskDiv.parentNode.stepID;
         updateTaskDiv(taskObj);
         updateStep();
         updateAllTaskTypes();
     };
     taskDiv.ondragend = function(e){
-        e.target.className = taskClass;
+        e.target.className = taskClassName;
         draggedTaskDiv = undefined;
     };
     
