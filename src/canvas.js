@@ -1,6 +1,7 @@
 /*jslint browser: true*/
-/*global THREE*/
+/*global THREE, interact*/
 
+var multiTouchAngle = 0;
 var fov = 20;
 var scene, raycaster, mainRenderer, mainCamera, currentBGColor;
 var renderers = [];
@@ -9,10 +10,12 @@ var bboxHelper = [];
 var rotationHandles = [];
 var rotationAxis = null;
 var rotationEmpty;
+var isRotationActive = false;
 var bbox, selectedMesh, clickedMesh;
 var selection = false;
 var mouseDownStart = new THREE.Vector2();
 var textures = [];
+
 
 function initCanvas() {
 	scene = new THREE.Scene();
@@ -78,9 +81,17 @@ function initCanvas() {
     var rButton = document.querySelector("#rotation-button");
     rButton.style.display = "none";
     rButton.onclick = function(){
-        rotationEmpty.visible = !rotationEmpty.visible;
-        rotationEmpty.hide = !rotationEmpty.visible;
+        isRotationActive = !isRotationActive;
+//        rotationEmpty.visible = !rotationEmpty.visible;
+//        rotationEmpty.hide = !rotationEmpty.visible;
     };
+
+    interact('#main-canvas').gesturable({
+      onmove: function (event) {
+        multiTouchAngle += event.da;
+      }
+});
+    
 }
 function createRenderer(canvas){
     //TODO delete renderer
@@ -210,14 +221,33 @@ function onCanvasMouseUp(event){
     clickedMesh = undefined;
     rotationAxis = null;
     selection = false;
+    multiTouchAngle = 0;
 }
 function onCanvasMouseMove(event){
     if(clickedMesh){
         var x = event.offsetX;
         var y = event.offsetY;
-    
-        var oP = clickedMesh.originalPosition;
-        clickedMesh.position.set(oP.x + (x-mouseDownStart.x)/1.4, oP.y - (y-mouseDownStart.y)/1.4, oP.z);//TODO 1.4
+        var scaleFactor = 1.4;//TODO 1.4
+        var xDis = x-mouseDownStart.x;
+        var yDis = y-mouseDownStart.y;
+        
+        if(!isRotationActive){
+            var oP = clickedMesh.originalPosition;
+            clickedMesh.position.set(oP.x + xDis/scaleFactor, oP.y - yDis/scaleFactor, oP.z);
+        }
+        else{
+            var oR = clickedMesh.originalRotation;
+            var toQ = new THREE.Quaternion();
+            var yRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), xDis * (Math.PI/180));
+            var xRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), yDis * (Math.PI/180));
+            var zRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -multiTouchAngle * (Math.PI/180));
+            toQ.copy(yRot);
+            toQ.multiply(xRot);
+            toQ.multiply(zRot);
+            toQ.multiply(oR);
+            clickedMesh.rotation.setFromQuaternion(toQ);
+        }
+        
         select(clickedMesh);
         onMeshChange(clickedMesh);
         
@@ -269,6 +299,8 @@ function getObjectSelection(point){
     if(mesh && !clickedRotation){
         var p = mesh.position;
         mesh.originalPosition = new THREE.Vector3(p.x, p.y, p.z);
+        mesh.originalRotation = new THREE.Quaternion();
+        mesh.originalRotation.setFromEuler(mesh.rotation);
     
         selectionOnCanvas(mesh);
         select(mesh);

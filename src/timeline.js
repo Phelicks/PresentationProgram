@@ -1,5 +1,5 @@
 /*jslint browser: true*/
-/*global JSZip, typeContainer*/
+/*global typeContainer, interact*/
 
 var steps = 0;
 var currentStep = 0;
@@ -8,7 +8,6 @@ var forward = true;
 var lastWasForward = true;
 var lastStepDiv;
 
-var zip;
 var taskObjects = [];
 var taskIDs = 0;
 var draggedTaskDiv, clickedTask, selectedTask;
@@ -29,7 +28,7 @@ var stepContent = function(number){return"<div>Step " + number + "</div>" +
 var stepContainerIDName = "el-container";
 
 var taskDivName = "tl-task-";
-var taskClassName = "mdl-button mdl-js-button mdl-button--raised mdl-button--accent tl-element";
+var taskClassName = "mdl-button mdl-js-button mdl-button--raised mdl-button--accent " + "tl-element";
 var taskClassNameDrag = taskClassName  + " drag";
 
 function initTimeline() {
@@ -40,12 +39,12 @@ function initTimeline() {
     prevStepDiv.onclick = function(){
         forward = false;
         prevStep();
-    }
+    };
     var nextStepDiv = document.getElementById("next-step");
     nextStepDiv.onclick = function(){
         forward = true;
         nextStep();
-    }
+    };
     
     var overlay = document.getElementById("overlay-black");
     overlay.onclick = hideOverlay;
@@ -319,6 +318,7 @@ function addTask(tlStep){
     taskDiv.taskObj = taskObj;
     
     taskDiv.ondragstart = function(e){
+        c("start");
         draggedTaskDiv = e.target;
         e.target.className = taskClassNameDrag;
         taskMenuClose();
@@ -344,6 +344,49 @@ function addTask(tlStep){
         e.target.className = taskClassName;
         draggedTaskDiv = undefined;
     };
+    
+    /*
+    interact(taskDiv).draggable({
+//        restrict: {
+//          restriction: "parent",
+//          endOnly: true,
+//          elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+//        },
+        onstart: function(event){
+            var target = event.target;
+            
+        },
+        onmove: function (event) {
+            var target = event.target,
+                // keep the dragged position in the data-x/data-y attributes
+                x = event.dx,
+                y = event.dy;
+
+            // translate the element
+            target.style.webkitTransform =
+            target.style.transform =
+              'translate(' + x + 'px, ' + y + 'px)';
+        },
+        onend: function (event) {
+            var target = event.target;
+            target.style.webkitTransform =
+            target.style.transform = "";
+        }
+    });
+    interact(taskDiv).dropzone({
+        accept: ".tl-element",
+        overlap: 0.5,
+        ondropactivate: function (event) {},
+        ondragenter: function (event) {
+            var target = event.target;
+            var step = target.parentNode;
+            step.insertBefore(event.relatedTarget, target);
+        },
+        ondragleave: function (event) {},
+        ondrop: function (event) {},
+        ondropdeactivate: function (event) {},
+    });
+    */
     
     tlStep.insertBefore(taskDiv, tlStep.lastElementChild);
     return taskObj;
