@@ -25,10 +25,10 @@ var stepContent = function(number){return"<div>Step " + number + "</div>" +
         "<a class='mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect'>" +
             "<i class='material-icons'>add</i>" +
         "</a>";};
-var stepContainerIDName = "el-container";
+var stepContainerIDName = "step-container";
 
 var taskDivName = "tl-task-";
-var taskClassName = "mdl-button mdl-js-button mdl-button--raised mdl-button--accent " + "tl-element";
+var taskClassName = "mdl-button mdl-js-button mdl-button--raised mdl-button--accent " + "task-element";
 var taskClassNameDrag = taskClassName  + " drag";
 
 function initTimeline() {
@@ -374,7 +374,7 @@ function addTask(tlStep){
         }
     });
     interact(taskDiv).dropzone({
-        accept: ".tl-element",
+        accept: ".task-element",
         overlap: 0.5,
         ondropactivate: function (event) {},
         ondragenter: function (event) {

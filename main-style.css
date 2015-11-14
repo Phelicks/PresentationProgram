@@ -3,14 +3,33 @@ body {
     margin: 0px;
     overflow: hidden;
 }
+.noselect{
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.drag{
+    opacity: 0.5;
+}
 
 #canvas-container{
+    position: relative;
     height: 50vh;
     width: 100%;
     margin-top: 1vh;
     z-index: 10;
 }
 
+/*Timeline*/
+#timeline-container{
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    z-index: 0;
+}
 #timeline{
     height: 25vh;
     background-color: #d0d0d0;
@@ -20,18 +39,12 @@ body {
     padding: 0 7px;
 }
 
-#timeline-container{
-    position: absolute;
-    bottom: 0px;
-    width: 100%;
-}
-
-#el-container{
+/*Step*/
+#step-container{
     float: left;
     height: 90%;
     padding-top: 5px;
 }
-
 .tl-step.mdl-card{
     width: 9em;
     min-height: 100%;
@@ -44,68 +57,55 @@ body {
     overflow: visible;
     z-index: 1;
 }
-
-.tl-element{
-/*    display: block !important;*/
-    margin: 2px auto;
-    width: 80%;
-    z-index: 11;
-}
-
-.drag{
-    opacity: 0.5;
-}
-
 #tl-add{
     opacity: 0.4;
 }
 
+/*Tasks*/
+.task-element{
+    margin: 2px auto;
+    width: 80%;
+}
+
+/*Task Menu*/
 #task-menu{
+    position: relative;
+    overflow: visible;
     background-color: #c0c0c0;
     display: inline-block;
     padding: 3px;
     padding-top: 0;
-    z-index: -10;
+    z-index: 1;
     
     -webkit-transition: 0.2s ease-in-out;
     -moz-transition: 0.2s ease-in-out;
     -o-transition: 0.2s ease-in-out;
     transition: 0.2s ease-in-out;
 }
-
 .task-menu-button{
+    overflow: visible;
     float: left;
     padding: 4px;
     margin: 4px;
 }
-
-.file-upload {
-    position: relative;
-    overflow: hidden;
-}
-
-.file-upload input{
-    cursor: pointer;
+.dropdown-task-menu.mdl-card{
+    min-width: 0;
+    min-height: 0;
+    max-height: 25vh;
+    width: auto;
+    
+    display: none;
+    backgroundColor: white;
     position: absolute;
-    top: 0;
-    right: 0;
-    margin: 0;
-    padding: 0;
-    font-size: 20px;
-    height: 100%;
-    opacity: 0;
-    filter: alpha(opacity=0);
+    overflow: scroll;
+    
+    margin: 0.5vh 0;
+    padding: 0.5vh;
+    
+    z-index: 25;
 }
 
-.noselect{
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
+/*Overlay*/
 #overlay-black{
     display: none;
     position: fixed;
@@ -116,7 +116,6 @@ body {
     filter: alpha(opacity=60); /* For IE8 and earlier */
     z-index: 100;
 }
-
 #overlay-dialog{
     display: none;
 
@@ -137,10 +136,27 @@ body {
 .add-category{
     clear: both;
 }
-
 .add-card.mdl-card{
     width: 10em;
     margin: 1em;
     float: left;
     cursor: pointer;
+}
+
+/*Misc*/
+.file-upload {
+    position: relative;
+    overflow: hidden;
+}
+.file-upload input{
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    height: 100%;
+    opacity: 0;
+    filter: alpha(opacity=0);
 }

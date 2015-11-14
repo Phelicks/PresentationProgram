@@ -5,7 +5,7 @@ var position = 0;
 
 function initTaskMenu(){
     domElement = document.getElementById("task-menu");
-    var trans = "translate(0px, -200px)"
+    var trans = "translate(0px, -200px)";
     domElement.style.transform = trans;
     domElement.style.webkitProperty = trans;
     domElement.style.MozProperty = trans;
@@ -26,6 +26,7 @@ function taskMenuOpen(taskObj){
         
         if(!domElement.contains(dom.html)){
             domElement.appendChild(dom.html);
+            domElement.appendChild(dom.html.dropdown);
         }
     }
     
@@ -37,7 +38,7 @@ function taskMenuClose(){
 }
 
 function showAnimation(){
-    var trans = "translate(0px, 0px)"
+    var trans = "translate(0px, 0px)";
     domElement.style.transform = trans;
     domElement.style.webkitProperty = trans;
     domElement.style.MozProperty = trans;
@@ -45,7 +46,7 @@ function showAnimation(){
     domElement.style.OProperty = trans;
 }
 function hideAnimation(){
-    var trans = "translate(0px, -"+domElement.clientHeight+"px)"
+    var trans = "translate(0px, -"+domElement.clientHeight+"px)";
     domElement.style.transform = trans;
     domElement.style.webkitProperty = trans;
     domElement.style.MozProperty = trans;
