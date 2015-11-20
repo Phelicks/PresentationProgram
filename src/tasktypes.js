@@ -29,7 +29,7 @@ TaskAnimation.prototype = {
     onEdit: function(){}
 };
 
-var sliderTextField = function(mesh, name, func){
+var sliderTextField = function(name, func){
     var value = 50;
     var textField = document.createElement("input");
     textField.type= "text";
@@ -62,27 +62,41 @@ var sliderTextField = function(mesh, name, func){
     slider.addEventListener("mouseup", function(){click = false;});
     
     var div = document.createElement("div");
-    div.appendChild(slider);
-    div.appendChild(textField);
+    var div2 = document.createElement("div");
+    var div3 = document.createElement("div");
+    div2.appendChild(slider);
+    div3.appendChild(textField);
+    div.appendChild(div2);
+    div.appendChild(div3);
     
-    var button = createHTMLButton(name, div);
+    var button = createTaskMenuButton(name, div);
     
     this.html = button;
 };
-var meshColorPicker = function(mesh, func){
+var meshColorPicker = function(func, defaultColor){
     var colorPick = document.createElement("input");
     colorPick.type = "text";
-    var color = createHTMLButton("Color", colorPick);
+    var color = createTaskMenuButton("Color", colorPick);
     
     $(colorPick).spectrum({
-        color: "#f00",
-        move: function(c){func(c);}
+        color: defaultColor || "#000000",
+        flat: true,
+        preferredFormat: "hex",
+        showInput: true,
+        
+//        showPalette: true,
+//        palette: [ ],
+//        showSelectionPalette: true,
+//        maxSelectionSize: 10,
+        
+        move: function(c){func(c);},
+        change: function(c){func(c);}
     });
     
     this.html = color;
 };
 var Menu3D = function(mesh){
-    this.depth = new sliderTextField(mesh, "Depth", function(p){
+    this.depth = new sliderTextField("Depth", function(p){
         mesh.position.z = -1000 + (-500 + p*1000);
     });
     this.rotation = {
@@ -97,22 +111,29 @@ typeContainer["ov-add-text"] ={
     meta:{
         category: "text",
         name: "Text",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+        background: "<div style='font-size:80px;font-family:serif;'><center>T|</center></div>",
+        description: "Add a new Text element."
     },
+    standartColor: 0,
+    defaultFont: "lora",
     generateMesh: function(){
-        var geometry = new THREE.TextGeometry("Text", {size: 50, height: 0.01});
-        var material = new THREE.MeshBasicMaterial({color: Math.random() * 0xffffff});
+        var geometry = new THREE.TextGeometry("Text", {size: 50, height: 0.01, font: this.defaultFont});
+        var material = new THREE.MeshBasicMaterial({color: this.standartColor});
         var mesh = new THREE.Mesh(geometry, material);
         mesh.position.z = -1000;
         return mesh;
     },
     getTaskType: function(mesh, safe){
+        var scope = this;
+        
+        //load from safe
+        var font = safe.font ? safe.font : this.defaultFont;
+        if(safe.color)changeColor(safe.color);
+        
         var textField = document.createElement("input");
         textField.type = "text";
         textField.value = safe.textInfo ? safe.textInfo.text : "Text";
-        var text = createHTMLButton("Text", textField);
-        
-        var font = safe.font ? safe.font : "helvetiker";
+        var text = createTaskMenuButton("Text", textField);
 
         textField.onchange = function(){
             changeText(textField.value, {
@@ -135,36 +156,49 @@ typeContainer["ov-add-text"] ={
             changeText(info.text, info.parameters);
         }
         
-        var select = document.createElement("select");
-        var fontDiv = createHTMLButton("Font", select);
+        var fontContainer = document.createElement("div");
+        var fontDiv = createTaskMenuButton("Font", fontContainer);
+        
+        function onFontClick(selection){
+            return function(){
+                font = selection;
+                safe.font = font;
+                changeText(textField.value, {
+                    size: 50, 
+                    height: 0.01,
+                    font: font
+                });
+            };
+        }
         
         for(var f in THREE.FontUtils.faces){
             if(f == "fontawesome")continue;
-            var option = document.createElement("option");
+            var option = document.createElement("div");
+            option.className = "task-menu-font";
+            option.style.fontFamily = f;
+            
             option.innerHTML = f;
-            option.textFont = f;
-            if(font === f)option.selected = "selected";
-            select.appendChild(option);
+            option.onclick = onFontClick(f);
+            fontContainer.appendChild(option);
         }
-        select.onchange = function(){
-            var selection = select.options[select.selectedIndex].textFont;
-            font = selection;
-            safe.font = font;
-            changeText(textField.value, {
-                size: 50, 
-                height: 0.01,
-                font: font
-            });
-        };
+        
+        function changeColor(color) {
+            safe.color = color;
+            scope.standartColor = color;
+            mesh.material.dispose();
+            mesh.material = new THREE.MeshBasicMaterial({color: color});
+        }
 
         var taskType = new TaskType();
         taskType.mesh = mesh;
-        taskType.name = "3D Text";
+        taskType.name = "Text";
         taskType.menu = new Menu3D(mesh);
         taskType.menu.text = {
             html: text
         };
-        taskType.menu.color = new meshColorPicker();
+        taskType.menu.color = new meshColorPicker(function(color){
+            changeColor(parseInt("0x"+color.toHex()));
+        });
         taskType.menu.font = {
             html: fontDiv
         };
@@ -176,7 +210,8 @@ typeContainer["ov-add-symbol"] ={
     meta:{
         category: "text",
         name: "Symbol",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+        background: "<div style='font-size:80px;font-family:fontawesome;'><center>\uf087</center></div>",
+        description: "A collection of great symbols."
     },
     standartSize: 50,
     standartColor: 0,
@@ -203,45 +238,31 @@ typeContainer["ov-add-symbol"] ={
         }
         
         //TaskMenu
-        //Symbol selection
-        /*
-        var symbolSelect = document.createElement("select");
-        symbolSelect.style.fontFamily = "FontAwesome";
-        var symbol = createHTMLButton("Symbol", symbolSelect);
-        
-        for(var g in THREE.FontUtils.faces.fontawesome.normal.normal.glyphs){
-            var option = document.createElement("option");
-            option.innerHTML = g;
-            option.symbolUni = g;
-            if(safe.symbolUni === g)option.selected = "selected";
-            symbolSelect.appendChild(option);
-        }
-        symbolSelect.onchange = function(){
-            var uni = symbolSelect.options[symbolSelect.selectedIndex].symbolUni;
-            safe.symbolUni = uni;
-            changesymbol(uni);
-        };
-        */
+        //Symbol Select
         var symbols = document.createElement("div");
         symbols.style.fontFamily = "FontAwesome";
+        symbols.style.fontSize = "large";
         
         function onSymboleClick(symbole){
             return function(){
                 changesymbol(symbole);
             };
-        };
+        }
         for(var g in THREE.FontUtils.faces.fontawesome.normal.normal.glyphs){
             var option = document.createElement("div");
             option.style.display = "inline-block";
+            option.style.padding = "1px";
+            option.style.cursor = "pointer";
             option.innerHTML = g;
             option.onclick = onSymboleClick(g);
             symbols.appendChild(option);
         }
-        var symbol = createHTMLButton("Symbol", symbols);
+        var symbol = createTaskMenuButton("Symbol", symbols);
         symbol.dropdown.style.width = "50%";
         
         //Mesh functions
         function changesymbol(uni){
+            safe.symbolUni = uni;
             mesh.geometry.dispose();
             mesh.geometry = new THREE.TextGeometry(uni, {
                 font:"fontawesome", 
@@ -264,10 +285,10 @@ typeContainer["ov-add-symbol"] ={
         taskType.menu.symbol = {
             html: symbol
         };
-        taskType.menu.color = new meshColorPicker(mesh, function(color) {
+        taskType.menu.color = new meshColorPicker(function(color) {
             changeColor(parseInt("0x"+color.toHex()));
         });
-        taskType.menu.size =  new sliderTextField(mesh, "Size", function(p){
+        taskType.menu.size =  new sliderTextField("Size", function(p){
             safe.size = p*300;
             scope.standartSize = safe.size;
             changesymbol(safe.symbolUni);
@@ -276,7 +297,7 @@ typeContainer["ov-add-symbol"] ={
         return taskType;
     }
 };
-typeContainer["ov-add-text-field"] = {
+/*typeContainer["ov-add-text-field"] = {
     meta:{
         category: "text",
         name: "Text field",
@@ -329,7 +350,7 @@ typeContainer["ov-add-text-field"] = {
 
         return taskType;
     }
-};
+};*/
 //------- Geometrys
 typeContainer["ov-add-circle"] = {
     meta:{
@@ -354,17 +375,20 @@ typeContainer["ov-add-circle"] = {
         taskType.name = "Circle";
         
         taskType.menu = new Menu3D(mesh);
-        taskType.menu.color = new meshColorPicker(mesh, function(color) {
+        taskType.menu.color = new meshColorPicker(function(color) {
             scope.defaultColor = parseInt("0x"+color.toHex());
             mesh.material.dispose();
             mesh.material = new THREE.MeshBasicMaterial({color: scope.defaultColor});
         });
-        taskType.menu.size = new sliderTextField(mesh, "Size", function(p){
-            mesh.geometry.dispose();
-            scope.defaultRadius = Math.max(0.01, 400*p);
-            mesh.geometry = new THREE.CircleGeometry(scope.defaultRadius, scope.defaultSegments);
+        taskType.menu.size = new sliderTextField("Size", function(p){
+//            mesh.geometry.dispose();
+//            scope.defaultRadius = Math.max(0.01, 400*p);
+//            mesh.geometry = new THREE.CircleGeometry(scope.defaultRadius, scope.defaultSegments);
+            mesh.scale.x = p*5;
+            mesh.scale.y = p*5;
+            mesh.scale.z = p*5;
         });
-        taskType.menu.segments = new sliderTextField(mesh, "Segments", function(p){
+        taskType.menu.segments = new sliderTextField("Segments", function(p){
             mesh.geometry.dispose();
             scope.defaultSegments = 3+p*100;
             mesh.geometry = new THREE.CircleGeometry(scope.defaultRadius, scope.defaultSegments);
@@ -398,87 +422,69 @@ typeContainer["ov-add-cube"] = {
 typeContainer["ov-add-aniamtion"] = {
     meta:{
         category: "animation",
-        name: "Animation Save Point",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+        name: "Property Saver",
+        background: "<div style='font-size:50px;font-family:fontawesome;'><center>\uf006</center></div>",
+        description: "Saves the properties of an element."
     },
     isAnimation: true,
     aniCollection: [],
     getTaskType: function(safe){
         var scope = this;
+        var mesh;
+        
         //Create TaskType Object and TaskMenu
         var taskType = new TaskType();
         taskType.animation = new TaskAnimation();
+        if(safe.easing){taskType.animation.easing = EasingFunctions[safe.easing];}
         
-        var mesh;
-        if(safe.easing){
-            var easing = EasingFunctions[safe.easing];
-            taskType.animation.easing = easing;
-        }
         var meshData = safe.meshData || {};
         safe.meshData = meshData;
         
-        //Duration input
-        var textField = document.createElement("input");
-        textField.type = "text";
-        var durationDiv = createHTMLButton("Duration", textField);
-        textField.onchange = function(){
-            taskType.animation.duration = textField.value;
-            previousStep = -1;
-            updateStep();
-        };
-        
         //Easing selection
-        var select = document.createElement("select");
-        var easingDiv = createHTMLButton("Easing: ", select);
-        for(var e in EasingFunctions){
-            var option = document.createElement("option");
-            option.innerHTML = e;
-            option.easingFunction = e;
-            if(taskType.animation.easing === EasingFunctions[e])option.selected = "selected";
-            select.appendChild(option);
+        var easingContainer = document.createElement("div");
+        var easingDiv = createTaskMenuButton("Easing", easingContainer);
+        function onEasingClick(selection){
+            return function(){
+                safe.easing = selection;
+                var easing = EasingFunctions[selection];
+                taskType.animation.easing = easing;
+                previousStep = -1;
+                updateStep();
+            };
         }
-        select.onchange = function(){
-            var selection = select.options[select.selectedIndex].easingFunction;
-            safe.easing = selection;
-            var easing = EasingFunctions[selection];
-            taskType.animation.easing = easing;
-            previousStep = -1;
-            updateStep();
-        };
+        for(var e in EasingFunctions){
+            var option = document.createElement("div");
+            option.className = "task-menu-font";
+            option.innerHTML = e;
+            option.onclick = onEasingClick(e);
+            easingContainer.appendChild(option);
+        }
 
         //TaskType Menu
         taskType.name = "Animation Save";
-        taskType.menu.duration = {
-            html: durationDiv
-        };
+        taskType.menu.duration = new sliderTextField("Duration", function(p){
+            taskType.animation.duration = p*2000;
+            safe.duration = taskType.animation.duration;
+            previousStep = -1;
+            updateStep();
+        });
         taskType.menu.easing = {
             html: easingDiv
         };
-        taskType.onUpdate = function(s){
-            textField.value = taskType.animation.duration;
-            meshData.step = s;
+        taskType.onUpdate = function(step){
+            //Update step
+            meshData.step = step;
             var i = scope.aniCollection.indexOf(meshData);
             if(i >= 0)scope.aniCollection[i] = undefined;
-            scope.aniCollection[s] = meshData;
+            scope.aniCollection[step] = meshData;
         };
         taskType.onDelete = function(){
             
         };
 
+        
         var startPos = null;
         var endPos = null;
-        
-        function setPositions(){
-            startPos = null;
-            for(var i=(meshData.step-1); i >= 0; i--){
-                var a = scope.aniCollection[i];
-                if(a){
-                    startPos = a.position;
-                    break;
-                }
-            }
-            endPos = meshData.position || null;
-        }
         
         //set TaskType properties
         taskType.animation.onInit = function(m){
@@ -515,6 +521,18 @@ typeContainer["ov-add-aniamtion"] = {
             meshData.position.y = mesh.position.y;
             meshData.position.z = mesh.position.z;
         };
+        
+        function setPositions(){
+            startPos = null;
+            for(var i=(meshData.step-1); i >= 0; i--){
+                var a = scope.aniCollection[i];
+                if(a){
+                    startPos = a.position;
+                    break;
+                }
+            }
+            endPos = meshData.position || null;
+        }
 
         return taskType;
     }
@@ -528,7 +546,7 @@ typeContainer["ov-remove"] = {
     },
     getTaskType: function(safe){
         var select = document.createElement("select");
-        var button = createHTMLButton("3D Object: ", select);
+        var button = createTaskMenuButton("3D Object: ", select);
 
         var selectedMesh = null;
         var meshSave = null;
@@ -639,11 +657,10 @@ typeContainer["ov-remove"] = {
     }
 };
 
-function createHTMLButton(text, content){
+function createTaskMenuButton(text, content){
     var div = document.createElement("div");
     div.className = "mdl-button mdl-js-button mdl-button--raised mdl-button--colored task-menu-button";
     div.innerHTML = text || "";
-    div.style.overflow = "visible";
     
     div.dropdown = document.createElement("div");
     div.dropdown.className = "dropdown-task-menu mdl-card mdl-shadow--2dp";
@@ -658,12 +675,12 @@ function createHTMLButton(text, content){
         document.addEventListener("mousedown", function(event){
             if(!div.dropdown.contains(event.target) || div === event.target){
                 div.dropdown.style.display = "none";
+                document.removeEventListener('mousedown', arguments.callee);
             }
-            document.removeEventListener('mousedown', arguments.callee);
         });
-        div.dropdown.addEventListener("mouseleave", function(){
-           div.dropdown.style.display = "none";
-        });
+//        div.dropdown.addEventListener("mouseleave", function(){
+//           div.dropdown.style.display = "none";
+//        });
     };
     
     return div;

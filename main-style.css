@@ -104,6 +104,14 @@ body {
     
     z-index: 25;
 }
+.task-menu-font{
+    padding: 0 0.3em;
+    margin: 0.3em 0;
+    text-align: left;
+    font-size: x-large;
+    cursor: pointer;
+    white-space: nowrap;
+}
 
 /*Overlay*/
 #overlay-black{
@@ -142,6 +150,26 @@ body {
     float: left;
     cursor: pointer;
 }
+.add-card .mdl-card__title.mdl-card--expand{
+    padding-bottom: 0;
+}
+.add-card .mdl-card__title-text{
+    color: grey;
+}
+.add-card .mdl-card__supporting-text{
+    max-height: 3em;
+}
+.type-selection-bg{
+    position: absolute;
+    display: block;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 50%;
+    padding-top: 5%;
+    z-index: -5;
+    overflow: hidden;
+}
 
 /*Misc*/
 .file-upload {
@@ -159,4 +187,8 @@ body {
     height: 100%;
     opacity: 0;
     filter: alpha(opacity=0);
+}
+.menu-icon{
+    margin-right: 10px;
+    width: 1em;
 }

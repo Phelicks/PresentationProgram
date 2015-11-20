@@ -6,6 +6,7 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		        
         <link rel="stylesheet" href="main-style.css" />
+        <link rel="stylesheet" href="fonts.css" />
         <link rel="stylesheet" href="lib/spectrum.css" />
         <link rel="stylesheet" href="lib/fonts/font-awesome-4.4.0/css/font-awesome.min.css" />
         
@@ -22,9 +23,13 @@
 		<script src="lib/easing.js"></script>
 		<script src="lib/interact.min.js"></script>
         
+<!--
 		<script src="lib/fonts/helvetiker_regular.typeface.js"></script>
 		<script src="lib/fonts/optimer_regular.typeface.js"></script>
-		<script src="lib/fonts/FontAwesome_Regular.js"></script>
+-->
+		<script src="lib/fonts/Lora/Lora_Regular.js"></script>
+		<script src="lib/fonts/Poiret_One/Poiret_One_Regular.js"></script>
+		<script src="lib/fonts/font-awesome-4.4.0/FontAwesome_Regular.js"></script>
 		
         <script src="lib/carota-debug.js"></script>
         <script src="lib/spectrum.js"></script>
@@ -75,7 +80,7 @@
           <header class="mdl-layout__header">
             <div class="mdl-layout__header-row">
               <!-- Title -->
-              <span class="mdl-layout-title">Presentation Program No.1</span>
+              <span class="mdl-layout-title">Presentation Program</span>
               <!-- Add spacer, to align navigation to the right -->
               <div class="mdl-layout-spacer"></div>
             </div>
@@ -83,14 +88,14 @@
           <div class="mdl-layout__drawer">
             <span class="mdl-layout-title">Menu</span>
             <nav class="mdl-navigation">
-              <a id="top-menu-open" class="mdl-navigation__link"><i class="fa fa-play"></i>Show</a>
-              <a id="top-menu-save" class="mdl-navigation__link"><i class="fa fa-floppy-o"></i>Save</a>
+              <a id="top-menu-open" class="mdl-navigation__link"><i class="fa fa-play fa-2x menu-icon"></i>Start</a>
+              <a id="top-menu-save" class="mdl-navigation__link"><i class="fa fa-floppy-o fa-2x menu-icon"></i>Save</a>
               <a id="top-menu-load" class="mdl-navigation__link file-upload">
                   <input type="file"/>
-                  <i class="fa fa-file"></i>
+                  <i class="fa fa-file fa-2x menu-icon"></i>
                   Load
                 </a>
-              <a id="top-menu-settings" class="mdl-navigation__link"><i class="fa fa-cog"></i>Settings</a>
+              <a id="top-menu-settings" class="mdl-navigation__link"><i class="fa fa-cog fa-2x menu-icon"></i>Settings</a>
             </nav>
           </div>
         
@@ -105,7 +110,7 @@
                 <!--Task Menu-->
                 <div style="text-align:center;">
                     <div id="task-menu">
-                        <div id="rotation-button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored task-menu-button">Rotation</div>
+                        <div id="rotation-button" class="mdl-button mdl-js-button mdl-button--raised task-menu-button">Rotation</div>
                     </div>
                 </div>
 
@@ -122,7 +127,7 @@
                         <div id="step-container">
                             <div id="tl-add" class="mdl-card mdl-shadow--2dp tl-step">
                                 <span style="position: absolute;width: 100%;top: 40%;display: block;">
-                                    <i class='material-icons'>add</i>
+                                    <i class="material-icons">add</i>
                                     <div>New step</div>
                                 </span>
                             </div>
