@@ -5,7 +5,7 @@ var fov = 20;
 
 var scene, raycaster, mainRenderer, mainCamera, 
     currentBGColor, bbox, selectedMesh, clickedMesh;
-
+var meshIDs = 0;
 var renderers = [];
 var textures = [];
 var meshes = [];
@@ -268,7 +268,8 @@ function onCanvasMouseMove(event){
 function prepMesh(mesh){
     //TODO
     //make sure if you use scene.remove(mesh), you also call mesh.geometry.dispose(), mesh.material.dispose() and mesh.texture.dispose()
-	scene.add(mesh);
+	mesh.id = meshIDs++;
+    scene.add(mesh);
     
     var box = new THREE.BoundingBoxHelper(mesh, 0xFF0000);
     box.update();

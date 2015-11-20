@@ -46,6 +46,18 @@ var sliderTextField = function(name, func){
     slider.min = "0";
     slider.max = "100";
     slider.value = value;
+    slider.onchange = function(){
+        click = true;
+        sliderMove();
+        click = false;
+    };
+    slider.addEventListener("mousemove", sliderMove);
+    slider.addEventListener("touchmove", sliderMove);
+    slider.addEventListener("touchstart", function(){click = true;});
+    slider.addEventListener("mousedown", function(){click = true;});
+    slider.addEventListener("touchend", function(){click = false;});
+    slider.addEventListener("mouseup", function(){click = false;});
+    
     function sliderMove(){
         if(!click)return;
         
@@ -54,12 +66,6 @@ var sliderTextField = function(name, func){
         var p = Number(value)/100;
         func(p);
     }
-    slider.addEventListener("mousemove", sliderMove);
-    slider.addEventListener("touchmove", sliderMove);
-    slider.addEventListener("touchstart", function(){click = true;});
-    slider.addEventListener("mousedown", function(){click = true;});
-    slider.addEventListener("touchend", function(){click = false;});
-    slider.addEventListener("mouseup", function(){click = false;});
     
     var div = document.createElement("div");
     var div2 = document.createElement("div");
@@ -381,9 +387,6 @@ typeContainer["ov-add-circle"] = {
             mesh.material = new THREE.MeshBasicMaterial({color: scope.defaultColor});
         });
         taskType.menu.size = new sliderTextField("Size", function(p){
-//            mesh.geometry.dispose();
-//            scope.defaultRadius = Math.max(0.01, 400*p);
-//            mesh.geometry = new THREE.CircleGeometry(scope.defaultRadius, scope.defaultSegments);
             mesh.scale.x = p*5;
             mesh.scale.y = p*5;
             mesh.scale.z = p*5;
@@ -437,8 +440,12 @@ typeContainer["ov-add-aniamtion"] = {
         taskType.animation = new TaskAnimation();
         if(safe.easing){taskType.animation.easing = EasingFunctions[safe.easing];}
         
-        var meshData = safe.meshData || {};
+        var meshData = safe.meshData || {animationValues: {}};
+        meshData.id = this.aniCollection.length;
         safe.meshData = meshData;
+        this.aniCollection.push(meshData);
+        
+        var prevData = null;
         
         //Easing selection
         var easingContainer = document.createElement("div");
@@ -474,65 +481,96 @@ typeContainer["ov-add-aniamtion"] = {
         taskType.onUpdate = function(step){
             //Update step
             meshData.step = step;
-            var i = scope.aniCollection.indexOf(meshData);
-            if(i >= 0)scope.aniCollection[i] = undefined;
-            scope.aniCollection[step] = meshData;
+            getPrevData();
         };
         taskType.onDelete = function(){
-            
+            var i = scope.aniCollection.indexOf(meshData);
+            if(i >= 0)scope.aniCollection.splice(i, 1);
         };
-
         
-        var startPos = null;
-        var endPos = null;
+        function getPrevData(){
+            prevData = null;
+            for(var i=0; i < scope.aniCollection.length; i++){
+                var data = scope.aniCollection[i];
+                if(mesh.id === data.meshID){
+                    if(data.step < meshData.step && (!prevData || data.step > prevData.step)){
+                        prevData = data;
+                    }
+                }
+            }
+        }
+        function prepAttr(mesh, animationValues, name, values){
+            if(animationValues[name])return;
+            
+            var m = mesh[name];
+            var a = animationValues[name] = {};
+            for(var i=0; i < values.length; i++){
+                a[values[i]] = m[values[i]];
+            }
+        }
         
         //set TaskType properties
         taskType.animation.onInit = function(m){
             mesh = m;
-            if(!meshData.position)meshData.position = {
-                x: m.position.x, 
-                y: m.position.y, 
-                z: m.position.z
-            };
+            meshData.meshID = mesh.id;
+            var aniData = meshData.animationValues;
+            
+            prepAttr(mesh, aniData, "position", ["x", "y", "z"]);
+            prepAttr(mesh, aniData, "rotation", ["x", "y", "z"]);
+            prepAttr(mesh, aniData, "scale", ["x", "y", "z"]);
         };
         taskType.animation.onStart = function(){
-            setPositions();
-            if(startPos && endPos){
-                mesh.position.set(startPos.x, startPos.y, startPos.z);
+            var aniData = meshData.animationValues;
+            for(var value in aniData){
+                var e = prevData ? prevData.animationValues[value] : null;
+                if(e){
+                    var m = mesh[value];
+                    for(var i in e){
+                        m[i] = e[i];
+                    }
+                }
             }
         };
         taskType.animation.onLoop = function(progress){
-            if(!(startPos && endPos))return;
             var p = progress;
             var q = 1.0 - p;
-            var f = startPos;
-            var t = endPos;
-            mesh.position.set(f.x*q + t.x*p, f.y*q + t.y*p, f.z*q + t.z*p);
+            
+            var aniData = meshData.animationValues;
+            for(var value in aniData){
+                var f = prevData ? prevData.animationValues[value] : null;
+                var t = aniData[value];
+                if(f && t){
+                    var m = mesh[value];
+                    for(var i in t){
+                        m[i] = f[i]*q + t[i]*p;
+                    }
+                }
+            }
         };
         taskType.animation.onEnd = function(){
-            setPositions();
-            if(startPos && endPos){
-                mesh.position.set(endPos.x, endPos.y, endPos.z);
+            var aniData = meshData.animationValues;
+            for(var value in aniData){
+                var s = aniData[value];
+                if(s){
+                    var m = mesh[value];
+                    for(var i in s){
+                        m[i] = s[i];
+                    }
+                }
             }
         };
         taskType.animation.onEdit = function(){
             if(currentStep != meshData.step)return;
-            meshData.position.x = mesh.position.x;
-            meshData.position.y = mesh.position.y;
-            meshData.position.z = mesh.position.z;
-        };
-        
-        function setPositions(){
-            startPos = null;
-            for(var i=(meshData.step-1); i >= 0; i--){
-                var a = scope.aniCollection[i];
-                if(a){
-                    startPos = a.position;
-                    break;
+            
+            var aniData = meshData.animationValues;
+            for(var value in aniData){
+                var a = aniData[value];
+                var b = mesh[value];
+                for(var i in a){
+                    a[i] = b[i];
                 }
             }
-            endPos = meshData.position || null;
-        }
+        };
 
         return taskType;
     }
