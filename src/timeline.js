@@ -32,7 +32,7 @@ var stepContainerIDName = "step-container";
 
 var taskDivName = "tl-task-";
 var taskClassName = "mdl-button mdl-js-button mdl-button--raised " + "task-element";
-var taskClassNameDrag = taskClassName  + " drag";
+var taskClassNameDrag = "drag";
 
 var typeElementContent = function(meta){return "" +
     "<div id='ov-add-text' class='add-card mdl-card mdl-shadow--2dp'>" +
@@ -290,7 +290,7 @@ function addTask(tlStep){
     
     taskDiv.ondragstart = function(e){
         draggedTaskDiv = e.target;
-        e.target.className = taskClassNameDrag;
+        e.target.classList.add(taskClassNameDrag);
         taskMenuClose();
     };
     taskDiv.ondragenter = function(e){
@@ -311,7 +311,7 @@ function addTask(tlStep){
         updateAllTaskTypes();
     };
     taskDiv.ondragend = function(e){
-        e.target.className = taskClassName;
+        e.target.classList.remove(taskClassNameDrag);
         draggedTaskDiv = undefined;
     };
     

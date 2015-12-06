@@ -4,40 +4,49 @@
 		<title>ppno</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		        
-        <link rel="stylesheet" href="main-style.css" />
-        <link rel="stylesheet" href="fonts.css" />
-        <link rel="stylesheet" href="lib/spectrum.css" />
+
+        <!--styles--> 
+        <link rel="stylesheet" href="style/main-style.css" />
+        <link rel="stylesheet" href="style/fonts.css" />
+        <link rel="stylesheet" href="lib/spectrum/spectrum.css" />
         <link rel="stylesheet" href="lib/fonts/font-awesome-4.4.0/css/font-awesome.min.css" />
-        
-        <link rel="stylesheet" href="lib/material.min.css">
-        <script src="lib/material.min.js"></script>
-        
+        <link rel="stylesheet" href="lib/mdl/material.min.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
         
-        
-		<script src="lib/jquery-2.1.4.min.js"></script>
-		<script src="lib/three.min.js"></script>
-		<script src="lib/TextGeometry.js"></script>
-		<script src="lib/FontUtils.js"></script>
+        <!--Libs-->
+        <script src="lib/mdl/material.min.js"></script>
+		<script src="lib/spectrum/jquery-2.1.4.min.js"></script>
+        <script src="lib/spectrum/spectrum.js"></script>
+		<script src="lib/three.js/three.min.js"></script>
+		<script src="lib/three.js/TextGeometry.js"></script>
+		<script src="lib/three.js/FontUtils.js"></script>
+        <script src="lib/jszip/jszip.min.js"></script>
+        <script src="lib/filesaver/FileSaver.min.js"></script>
+		<script src="lib/interact/interact.min.js"></script>
 		<script src="lib/easing.js"></script>
-		<script src="lib/interact.min.js"></script>
         
 <!--
 		<script src="lib/fonts/helvetiker_regular.typeface.js"></script>
 		<script src="lib/fonts/optimer_regular.typeface.js"></script>
+        <script src="lib/carota-debug.js"></script>
+        <script src="lib/stats.min.js"></script>
 -->
+        <!--Fonts-->
 		<script src="lib/fonts/Lora/Lora_Regular.js"></script>
 		<script src="lib/fonts/Poiret_One/Poiret_One_Regular.js"></script>
 		<script src="lib/fonts/font-awesome-4.4.0/FontAwesome_Regular.js"></script>
-		
-        <script src="lib/carota-debug.js"></script>
-        <script src="lib/spectrum.js"></script>
-		
-        <script src="lib/jszip.min.js"></script>
-        <script src="lib/FileSaver.min.js"></script>
-        <script src="lib/stats.min.js"></script>
         
+		<script src="lib/fonts/fontlibrary_org/Caladea_Regular.js"></script>
+		<script src="lib/fonts/fontlibrary_org/Carlito_Regular.js"></script>
+		<script src="lib/fonts/fontlibrary_org/Fantasque_Sans_Mono_Regular.js"></script>
+		<script src="lib/fonts/fontlibrary_org/GI_Regular.js"></script>
+		<script src="lib/fonts/fontlibrary_org/Grundschrift_Normal_Regular.js"></script>
+		<script src="lib/fonts/fontlibrary_org/Hanken_Book.js"></script>
+		<script src="lib/fonts/fontlibrary_org/Nimbus_Sans_L_Regular.js"></script>
+		<script src="lib/fonts/fontlibrary_org/Railway_Regular.js"></script>
+		<script src="lib/fonts/fontlibrary_org/Unique_Regular.js"></script>
+		
+        <!--Source-->
 		<script src="src/canvas.js"></script>
 		<script src="src/tasktypes.js"></script>
 		<script src="src/timeline.js"></script>
@@ -89,10 +98,10 @@
             <span class="mdl-layout-title">Menu</span>
             <nav class="mdl-navigation">
               <a id="top-menu-open" class="mdl-navigation__link"><i class="fa fa-play fa-2x menu-icon"></i>Start</a>
-              <a id="top-menu-save" class="mdl-navigation__link"><i class="fa fa-floppy-o fa-2x menu-icon"></i>Save</a>
+              <a id="top-menu-save" class="mdl-navigation__link"><i class="fa fa-download fa-2x menu-icon"></i>Save</a>
               <a id="top-menu-load" class="mdl-navigation__link file-upload">
                   <input type="file"/>
-                  <i class="fa fa-file fa-2x menu-icon"></i>
+                  <i class="fa fa-upload fa-2x menu-icon"></i>
                   Load
                 </a>
               <a id="top-menu-settings" class="mdl-navigation__link"><i class="fa fa-cog fa-2x menu-icon"></i>Settings</a>

@@ -1,0 +1,54 @@
+@font-face {
+    font-family: lora;
+    src: url("../lib/fonts/Lora/Lora-Regular.ttf");
+}
+
+@font-face {
+    font-family: poiret one;
+    src: url("../lib/fonts/Poiret_One/PoiretOne-Regular.ttf");
+}
+
+@font-face {
+    font-family: gi;
+    src: url("../lib/fonts/fontlibrary_org/GI-Regular.otf");
+}
+
+@font-face {
+    font-family: grundschrift normal;
+    src: url("../lib/fonts/fontlibrary_org/Grundschrift-Normal.otf");
+}
+
+@font-face {
+    font-family: caladea;
+    src: url("../lib/fonts/fontlibrary_org/caladea-regular.ttf");
+}
+
+@font-face {
+    font-family: carlito;
+    src: url("../lib/fonts/fontlibrary_org/Carlito-Regular.ttf");
+}
+
+@font-face {
+    font-family: fantasque sans mono;
+    src: url("../lib/fonts/fontlibrary_org/FantasqueSansMono-Regular.ttf");
+}
+
+@font-face {
+    font-family: hanken;
+    src: url("../lib/fonts/fontlibrary_org/Hanken-Book.ttf");
+}
+
+@font-face {
+    font-family: nimbus sans l;
+    src: url("../lib/fonts/fontlibrary_org/nimbus-sans-l_regular.ttf");
+}
+
+@font-face {
+    font-family: railway;
+    src: url("../lib/fonts/fontlibrary_org/Railway.ttf");
+}
+
+@font-face {
+    font-family: unique;
+    src: url("../lib/fonts/fontlibrary_org/Unique.ttf");
+}

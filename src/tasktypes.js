@@ -102,12 +102,18 @@ var meshColorPicker = function(func, defaultColor){
     this.html = color;
 };
 var Menu3D = function(mesh){
+    var scope = this;
     this.depth = new sliderTextField("Depth", function(p){
         mesh.position.z = -1000 + (-500 + p*1000);
     });
     this.rotation = {
         html: document.querySelector("#rotation-button")
     };
+    this.alpha = new sliderTextField("Alpha", function(p){
+        mesh.material.transparent = true;
+        mesh.material.opacity = p;
+        if(scope.animation)scope.animation.onEdit();
+    });
 };
 
 
@@ -120,10 +126,11 @@ typeContainer["ov-add-text"] ={
         background: "<div style='font-size:80px;font-family:serif;'><center>T|</center></div>",
         description: "Add a new Text element."
     },
+    standartSize: 50,
     standartColor: 0,
     defaultFont: "lora",
     generateMesh: function(){
-        var geometry = new THREE.TextGeometry("Text", {size: 50, height: 0.01, font: this.defaultFont});
+        var geometry = new THREE.TextGeometry("Text", {size: this.standartSize, height: 0.01, font: this.defaultFont});
         var material = new THREE.MeshBasicMaterial({color: this.standartColor});
         var mesh = new THREE.Mesh(geometry, material);
         mesh.position.z = -1000;
@@ -135,6 +142,7 @@ typeContainer["ov-add-text"] ={
         //load from safe
         var font = safe.font ? safe.font : this.defaultFont;
         if(safe.color)changeColor(safe.color);
+        if(!safe.size)safe.size = this.standartSize;
         
         var textField = document.createElement("input");
         textField.type = "text";
@@ -143,7 +151,7 @@ typeContainer["ov-add-text"] ={
 
         textField.onchange = function(){
             changeText(textField.value, {
-                size: 50, 
+                size: safe.size, 
                 height: 0.01,
                 font: font
             });
@@ -170,7 +178,7 @@ typeContainer["ov-add-text"] ={
                 font = selection;
                 safe.font = font;
                 changeText(textField.value, {
-                    size: 50, 
+                    size: safe.size, 
                     height: 0.01,
                     font: font
                 });
@@ -180,7 +188,7 @@ typeContainer["ov-add-text"] ={
         for(var f in THREE.FontUtils.faces){
             if(f == "fontawesome")continue;
             var option = document.createElement("div");
-            option.className = "task-menu-font";
+            option.className = "task-menu-font mdl-card__actions mdl-card--border";
             option.style.fontFamily = f;
             
             option.innerHTML = f;
@@ -208,6 +216,11 @@ typeContainer["ov-add-text"] ={
         taskType.menu.font = {
             html: fontDiv
         };
+        taskType.menu.size = new sliderTextField("Size", function(p){
+            mesh.scale.x = p*2 || 0.001;
+            mesh.scale.y = p*2 || 0.001;
+            mesh.scale.z = p*2 || 0.001;
+        });
 
         return taskType;
     }
@@ -281,12 +294,13 @@ typeContainer["ov-add-symbol"] ={
             scope.standartColor = color;
             mesh.material.dispose();
             mesh.material = new THREE.MeshBasicMaterial({color: color});
+            mesh.material.transparent = true;
         }
         
         //TaskType Object
         var taskType = new TaskType();
         taskType.mesh = mesh;
-        taskType.name = "Symbole";
+        taskType.name = "Symbol";
         taskType.menu = new Menu3D(mesh);
         taskType.menu.symbol = {
             html: symbol
@@ -295,7 +309,7 @@ typeContainer["ov-add-symbol"] ={
             changeColor(parseInt("0x"+color.toHex()));
         });
         taskType.menu.size =  new sliderTextField("Size", function(p){
-            safe.size = p*300;
+            safe.size = p*100 || 0.0001;
             scope.standartSize = safe.size;
             changesymbol(safe.symbolUni);
         });
@@ -362,7 +376,8 @@ typeContainer["ov-add-circle"] = {
     meta:{
         category: "geometry",
         name: "Circle",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+        background: "<div style='font-size:80px;font-family:fontawesome;'><center>\uf111</center></div>",
+        description: "Adds a circle geometry."
     },
     defaultRadius: 100,
     defaultSegments: 64,
@@ -387,9 +402,9 @@ typeContainer["ov-add-circle"] = {
             mesh.material = new THREE.MeshBasicMaterial({color: scope.defaultColor});
         });
         taskType.menu.size = new sliderTextField("Size", function(p){
-            mesh.scale.x = p*5;
-            mesh.scale.y = p*5;
-            mesh.scale.z = p*5;
+            mesh.scale.x = p*2;
+            mesh.scale.y = p*2;
+            mesh.scale.z = p*2;
         });
         taskType.menu.segments = new sliderTextField("Segments", function(p){
             mesh.geometry.dispose();
@@ -404,19 +419,97 @@ typeContainer["ov-add-cube"] = {
     meta:{
         category: "geometry",
         name: "Cube",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+        background: "<div style='font-size:80px;font-family:fontawesome;'><center>\uf1b2</center></div>",
+        description: "Adds a cube geometry."
     },
+    defaultColor: 0x999999,
     generateMesh: function(){
+        var scope = this;
         var geometry = new THREE.BoxGeometry( 100, 100, 100 );
-        var material = new THREE.MeshNormalMaterial();
+        var material = new THREE.MeshLambertMaterial({color: scope.defaultColor});
         var cube = new THREE.Mesh( geometry, material );
         cube.position.z = -1000;
         return cube;
     },
     getTaskType: function(mesh){
+        var scope = this;
         var taskType = new TaskType();
         taskType.name = "3D Cube";
         taskType.menu = new Menu3D(mesh);
+        taskType.menu.color = new meshColorPicker(function(color) {
+            scope.defaultColor = parseInt("0x"+color.toHex());
+            mesh.material.dispose();
+            mesh.material = new THREE.MeshLambertMaterial({color: scope.defaultColor});
+        });
+        taskType.menu.size = new sliderTextField("Size", function(p){
+            mesh.scale.x = p * 2;
+            mesh.scale.y = p * 2;
+            mesh.scale.z = p * 2;
+        });
+
+        return taskType; 
+    }
+};
+typeContainer.image = {
+    meta:{
+        category: "geometry",
+        name: "Image",
+        background: "<div style='font-size:80px;font-family:fontawesome;'><center>\uf03e</center></div>",
+        description: "Adds an image."
+    },
+    defaultImage: "assets/default.png",
+    textureLoader: new THREE.TextureLoader(),
+    loadTexture: function(mesh, path){
+        this.textureLoader.crossOrigin = '';
+        this.textureLoader.load(
+            path,
+            function ( texture ) {
+                texture.minFilter = THREE.LinearFilter;
+                mesh.scale.x = (texture.image.width/texture.image.height);
+                mesh.material.dispose();
+                mesh.material = new THREE.MeshBasicMaterial( {
+                    transparent: true,
+                    map: texture
+                } );
+            },
+            function ( xhr ) {},
+            function ( xhr ) {}
+        );
+        
+    },
+    generateMesh: function(){
+        var material = new THREE.MeshBasicMaterial({
+            color : 0xAAAAAA
+        });
+        var geometry = new THREE.PlaneGeometry( 100, 100, 100 );
+        var mesh = new THREE.Mesh( geometry, material );
+        mesh.position.z = -1000;
+        this.loadTexture(mesh, this.defaultImage);
+        
+        return mesh;
+    },
+    getTaskType: function(mesh, safe){
+        var scope = this;
+        
+        if(safe.path){
+            scope.loadTexture(mesh, safe.path);
+        }
+        
+        var textField = document.createElement("input");
+        textField.type= "text";
+        textField.value = "Image URL";
+        textField.onchange = function(){
+            scope.loadTexture(mesh, textField.value);
+            safe.path = textField.value;
+        };
+        var image = createTaskMenuButton("Image", textField);
+        
+        var taskType = new TaskType();
+        taskType.name = "Image";
+        taskType.menu = new Menu3D(mesh);
+        taskType.menu.image = {
+            html: image
+        };
 
         return taskType; 
     }
@@ -426,7 +519,7 @@ typeContainer["ov-add-aniamtion"] = {
     meta:{
         category: "animation",
         name: "Property Saver",
-        background: "<div style='font-size:50px;font-family:fontawesome;'><center>\uf006</center></div>",
+        background: "<div style='font-size:50px;font-family:fontawesome;'><center>\uf005</center></div>",
         description: "Saves the properties of an element."
     },
     isAnimation: true,
@@ -441,7 +534,7 @@ typeContainer["ov-add-aniamtion"] = {
         if(safe.easing){taskType.animation.easing = EasingFunctions[safe.easing];}
         
         var meshData = safe.meshData || {animationValues: {}};
-        meshData.id = this.aniCollection.length;
+//        meshData.id = this.aniCollection.length;
         safe.meshData = meshData;
         this.aniCollection.push(meshData);
         
@@ -475,6 +568,11 @@ typeContainer["ov-add-aniamtion"] = {
             previousStep = -1;
             updateStep();
         });
+//        taskType.menu.alpha = new sliderTextField("Alpha", function(p){
+//            mesh.material.transparent = true;
+//            mesh.material.opacity = p;
+//            taskType.animation.onEdit();
+//        });
         taskType.menu.easing = {
             html: easingDiv
         };
@@ -511,6 +609,8 @@ typeContainer["ov-add-aniamtion"] = {
         
         //set TaskType properties
         taskType.animation.onInit = function(m){
+            m.material.transparent = true;
+            m.material.opacity = 1.0;
             mesh = m;
             meshData.meshID = mesh.id;
             var aniData = meshData.animationValues;
@@ -518,6 +618,7 @@ typeContainer["ov-add-aniamtion"] = {
             prepAttr(mesh, aniData, "position", ["x", "y", "z"]);
             prepAttr(mesh, aniData, "rotation", ["x", "y", "z"]);
             prepAttr(mesh, aniData, "scale", ["x", "y", "z"]);
+            prepAttr(mesh, aniData, "material", ["opacity"]);
         };
         taskType.animation.onStart = function(){
             var aniData = meshData.animationValues;
@@ -578,13 +679,14 @@ typeContainer["ov-add-aniamtion"] = {
 //------- Remove
 typeContainer["ov-remove"] = {
     meta:{
-        category: "remove",
+        category: "animation",
         name: "Remove",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenan convallis."
+        background: "<div style='font-size:80px;font-family:fontawesome;'><center>\uf056</center></div>",
+        description: "Hides an element."
     },
     getTaskType: function(safe){
         var select = document.createElement("select");
-        var button = createTaskMenuButton("3D Object: ", select);
+        var button = createTaskMenuButton("3D Object", select);
 
         var selectedMesh = null;
         var meshSave = null;

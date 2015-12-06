@@ -44,6 +44,10 @@ function saveToFile(){
     saveAs(blob, "presentation.ppno");
 }
 function loadFromFile(e){
+    if(steps > 0){
+        alert("Please refresh this site before loading a new presentation.");
+        return;
+    }
     var file = e.target.files[0];
     if (!file) {return;}
 
